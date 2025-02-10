@@ -30,3 +30,16 @@ mybatis-plus:
       logic-delete-value: 1
       #      指定逻辑未删除的值是什么，若为0，则不删除
       logic-not-delete-value: 0
+
+#接口文档
+knife4j:
+  enable: true
+  openapi:
+    title: 鸡哥智能协同云图库接口文档
+    version: 1.0
+    group:
+      default:
+        group-name: 默认分组
+        api-rule: package
+        api-rule-resources:
+          - com.jige.jigepicturebackend.controller
