@@ -1,0 +1,32 @@
+server:
+  port: 8123
+  servlet:
+    #    指定后端接口路径
+    #    localhost:8080/api
+    context-path: /api
+
+spring:
+  #指定spring应用名称(可选)
+  application:
+    name: jige-picture-backend
+    #    数据库配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/jige_picture
+    username: root
+    password: abc123
+
+mybatis-plus:
+  configuration:
+    #  开启驼峰命名
+    map-underscore-to-camel-case: false
+    #    仅在开发环境打印日志，StdOut标准输出，兼容性比较好
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      #      指定逻辑删除的字段
+      logic-delete-field: isDelete
+      #      指定逻辑删除的值是什么，若为1，则删除
+      logic-delete-value: 1
+      #      指定逻辑未删除的值是什么，若为0，则不删除
+      logic-not-delete-value: 0
