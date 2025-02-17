@@ -6,6 +6,7 @@ import com.jige.jigepicturebackend.exception.ErrorCode;
 import com.jige.jigepicturebackend.exception.ThrowUtils;
 import com.jige.jigepicturebackend.model.dto.UserLoginRequest;
 import com.jige.jigepicturebackend.model.dto.UserRegisterRequest;
+import com.jige.jigepicturebackend.model.entity.User;
 import com.jige.jigepicturebackend.model.vo.LoginUserVO;
 import com.jige.jigepicturebackend.service.UserService;
 import org.springframework.web.bind.annotation.*;
@@ -46,5 +47,14 @@ public class UserController {
         String userPassword = userLoginRequest.getUserPassword();
         LoginUserVO loginUserVO = userService.userLogin(userAccount, userPassword, request);
         return ResultUtils.success(loginUserVO);
+    }
+
+    /**
+     * 获取当前登录用户
+     */
+    @GetMapping("/get/login")
+    public BaseResponse<LoginUserVO> getLoginUser(HttpServletRequest request){
+        User loginUser = userService.getLoginUser(request);
+        return ResultUtils.success(userService.getLoginUserVo(loginUser));
     }
 }
