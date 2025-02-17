@@ -36,7 +36,7 @@ public interface UserService extends IService<User> {
      * 获取当前登录用户（在后端间调用）
      * @param request
      */
-    User getLoginUser(HttpServletRequest request)
+    User getLoginUser(HttpServletRequest request);
 
     /**
      * 获取加密后的密码
@@ -51,4 +51,11 @@ public interface UserService extends IService<User> {
      * @return
      */
     LoginUserVO getLoginUserVo(User user);
+
+    /**
+     * 用户注销
+     *
+     * @param request
+     */
+    boolean userLogout(HttpServletRequest request);
 }
