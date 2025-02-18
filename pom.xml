@@ -32,11 +32,19 @@
             <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
 
+
         <!--        数据库操作：https://baomidou.com/getting-started/-->
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-boot-starter</artifactId>
             <version>3.5.9</version>
+        </dependency>
+
+        <!--        分页插件：https://baomidou.com/getting-started/install/#solon-->
+        <!-- jdk 8+ 引入可选模块 -->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-jsqlparser-4.9</artifactId>
         </dependency>
 
         <!--        工具库：https://doc.hutool.cn/pages/index/-->
@@ -71,6 +79,13 @@
     </dependencies>
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-bom</artifactId>
+                <version>3.5.9</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
