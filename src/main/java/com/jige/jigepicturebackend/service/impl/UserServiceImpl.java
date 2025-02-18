@@ -109,12 +109,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         if (currentUser == null || currentUser.getId() == null) {
             throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
         }
-        //从数据库中查询（追求性能的话可以注释，直接返回上述结果）
+        //region 从数据库中查询（追求性能的话可以注释，直接返回上述结果）
         Long userId = currentUser.getId();
         currentUser = this.getById(userId);
         if (currentUser == null) {
             throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
         }
+        //endregion
         return currentUser;
     }
 

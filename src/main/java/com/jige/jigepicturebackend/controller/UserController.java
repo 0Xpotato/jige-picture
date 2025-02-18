@@ -4,8 +4,8 @@ import com.jige.jigepicturebackend.common.BaseResponse;
 import com.jige.jigepicturebackend.common.ResultUtils;
 import com.jige.jigepicturebackend.exception.ErrorCode;
 import com.jige.jigepicturebackend.exception.ThrowUtils;
-import com.jige.jigepicturebackend.model.dto.UserLoginRequest;
-import com.jige.jigepicturebackend.model.dto.UserRegisterRequest;
+import com.jige.jigepicturebackend.model.dto.user.UserLoginRequest;
+import com.jige.jigepicturebackend.model.dto.user.UserRegisterRequest;
 import com.jige.jigepicturebackend.model.entity.User;
 import com.jige.jigepicturebackend.model.vo.LoginUserVO;
 import com.jige.jigepicturebackend.service.UserService;
@@ -60,11 +60,11 @@ public class UserController {
 
     /**
      * 用户注销
-     * @param userLoginRequest
+     * @param request
      * @return
      */
     @PostMapping("/logout")
-    public BaseResponse<Boolean> userLogin(HttpServletRequest request){
+    public BaseResponse<Boolean> userLogout(HttpServletRequest request){
         ThrowUtils.throwIf(request==null, ErrorCode.PARAMS_ERROR);
         boolean result = userService.userLogout(request);
         return ResultUtils.success(result);
