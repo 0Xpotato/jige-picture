@@ -17,6 +17,9 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
+/**
+ * 权限校验切面
+ */
 @Aspect     //切面
 @Component  //组件，声明为Spring的bean
 public class AuthInterceptor {
