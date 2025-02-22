@@ -8,8 +8,7 @@ import com.jige.jigepicturebackend.config.CosClientConfig;
 import com.jige.jigepicturebackend.exception.BusinessException;
 import com.jige.jigepicturebackend.exception.ErrorCode;
 import com.jige.jigepicturebackend.exception.ThrowUtils;
-import com.jige.jigepicturebackend.model.dto.picture.UploadPictureResult;
-import com.jige.jigepicturebackend.model.entity.Picture;
+import com.jige.jigepicturebackend.model.dto.file.UploadPictureResult;
 import com.qcloud.cos.model.PutObjectResult;
 import com.qcloud.cos.model.ciModel.persistence.ImageInfo;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +17,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;

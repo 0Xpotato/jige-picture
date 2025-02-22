@@ -1,4 +1,4 @@
-package com.jige.jigepicturebackend.model.dto.picture;
+package com.jige.jigepicturebackend.model.dto.file;
 
 import lombok.Data;
 

@@ -15,9 +15,13 @@ spring:
     url: jdbc:mysql://localhost:3306/jige_picture
     username: root
     password: abc123
-#    指定生效的配置文件
+  #    指定生效的配置文件
   profiles:
     active: local
+  servlet:
+    multipart:
+      #      最大可上传的文件大小
+      max-file-size: 10MB
 
 mybatis-plus:
   configuration:
@@ -45,4 +49,3 @@ knife4j:
         api-rule: package
         api-rule-resources:
           - com.jige.jigepicturebackend.controller
-
