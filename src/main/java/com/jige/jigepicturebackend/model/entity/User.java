@@ -10,7 +10,7 @@ import java.util.Date;
 import lombok.Data;
 
 /**
- * 用户
+ * User实体类
  * @TableName user
  */
 @TableName(value ="user")

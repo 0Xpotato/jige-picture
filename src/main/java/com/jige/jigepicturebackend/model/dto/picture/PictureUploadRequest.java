@@ -1,0 +1,20 @@
+package com.jige.jigepicturebackend.model.dto.picture;
+
+import lombok.Data;
+
+import java.io.Serializable;
+
+/**
+ * 图片上传请求类
+ */
+@Data
+public class PictureUploadRequest implements Serializable {
+
+    /**
+     * 图片 id（用于修改）
+     */
+    private Long id;
+
+    private static final long serialVersionUID = -9001529256885639170L;
+
+}
