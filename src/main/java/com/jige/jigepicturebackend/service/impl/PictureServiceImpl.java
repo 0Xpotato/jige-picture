@@ -46,6 +46,13 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     @Resource
     private UserService userService;
 
+    /**
+     * 上传图片并返回封装后的图片信息
+     * @param multipartFile
+     * @param pictureUploadRequest
+     * @param loginUser
+     * @return
+     */
     @Override
     public PictureVO uploadPicture(MultipartFile multipartFile, PictureUploadRequest pictureUploadRequest, User loginUser) {
         ThrowUtils.throwIf(loginUser == null, ErrorCode.NOT_LOGIN_ERROR);
@@ -143,8 +150,14 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     }
 
 
+    /**
+     * 封装图片信息
+     * @param picture
+     * @param request
+     * @return
+     */
     @Override
-    public PictureVO getPictureVo(Picture picture, HttpServletRequest request){
+    public PictureVO getPictureVO(Picture picture, HttpServletRequest request){
         // 对象转封装类
         PictureVO pictureVO = PictureVO.objToVo(picture);
         // 关联查询用户信息
@@ -185,6 +198,10 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         return pictureVOPage;
     }
 
+    /**
+     * 校验图片
+     * @param picture
+     */
     @Override
     public void validPicture(Picture picture){
         ThrowUtils.throwIf(picture==null,ErrorCode.PARAMS_ERROR);

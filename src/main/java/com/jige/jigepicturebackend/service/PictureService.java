@@ -43,7 +43,7 @@ public interface PictureService extends IService<Picture> {
      * @param picture
      * @return
      */
-    PictureVO getPictureVo(Picture picture, HttpServletRequest request);
+    PictureVO getPictureVO(Picture picture, HttpServletRequest request);
 
     /**
      * 分页获取图片封装
