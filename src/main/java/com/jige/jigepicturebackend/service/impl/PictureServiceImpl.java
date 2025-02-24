@@ -206,11 +206,11 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     public void validPicture(Picture picture){
         ThrowUtils.throwIf(picture==null,ErrorCode.PARAMS_ERROR);
         // 从对象中取值
-        Long userId = picture.getUserId();
+        Long id = picture.getId();
         String url = picture.getUrl();
         String introduction = picture.getIntroduction();
         // 修改数据时，id 不能为空，有参数则校验
-        ThrowUtils.throwIf(ObjectUtil.isNull(userId),ErrorCode.PARAMS_ERROR,"id不能为空");
+        ThrowUtils.throwIf(ObjUtil.isNull(id),ErrorCode.PARAMS_ERROR,"id不能为空");
         if (StrUtil.isNotBlank(url)){
             ThrowUtils.throwIf(url.length()>1024,ErrorCode.PARAMS_ERROR,"url 过长");
         }

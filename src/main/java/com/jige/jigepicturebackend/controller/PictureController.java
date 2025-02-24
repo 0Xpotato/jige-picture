@@ -1,7 +1,6 @@
 package com.jige.jigepicturebackend.controller;
 
 import cn.hutool.json.JSONUtil;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.jige.jigepicturebackend.annotation.AuthCheck;
 import com.jige.jigepicturebackend.common.BaseResponse;
 import com.jige.jigepicturebackend.common.DeleteRequest;
@@ -11,12 +10,10 @@ import com.jige.jigepicturebackend.exception.BusinessException;
 import com.jige.jigepicturebackend.exception.ErrorCode;
 import com.jige.jigepicturebackend.exception.ThrowUtils;
 import com.jige.jigepicturebackend.model.dto.picture.PictureEditRequest;
-import com.jige.jigepicturebackend.model.dto.picture.PictureQueryRequest;
 import com.jige.jigepicturebackend.model.dto.picture.PictureUpdateRequest;
 import com.jige.jigepicturebackend.model.dto.picture.PictureUploadRequest;
 import com.jige.jigepicturebackend.model.entity.Picture;
 import com.jige.jigepicturebackend.model.entity.User;
-import com.jige.jigepicturebackend.model.enums.UserRoleEnum;
 import com.jige.jigepicturebackend.model.vo.PictureTagCategory;
 import com.jige.jigepicturebackend.model.vo.PictureVO;
 import com.jige.jigepicturebackend.service.PictureService;
@@ -136,7 +133,6 @@ public class PictureController {
         return ResultUtils.success(true);
     }
 
-
     /**
      * 获取预置标签和分类
      */
@@ -149,4 +145,5 @@ public class PictureController {
         pictureTagCategory.setCategoryList(categoryList);
         return ResultUtils.success(pictureTagCategory);
     }
+
 }
