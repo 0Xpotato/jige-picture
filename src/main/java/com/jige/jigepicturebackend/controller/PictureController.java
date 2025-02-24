@@ -1,6 +1,8 @@
 package com.jige.jigepicturebackend.controller;
 
+
 import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.jige.jigepicturebackend.annotation.AuthCheck;
 import com.jige.jigepicturebackend.common.BaseResponse;
 import com.jige.jigepicturebackend.common.DeleteRequest;
@@ -10,6 +12,7 @@ import com.jige.jigepicturebackend.exception.BusinessException;
 import com.jige.jigepicturebackend.exception.ErrorCode;
 import com.jige.jigepicturebackend.exception.ThrowUtils;
 import com.jige.jigepicturebackend.model.dto.picture.PictureEditRequest;
+import com.jige.jigepicturebackend.model.dto.picture.PictureQueryRequest;
 import com.jige.jigepicturebackend.model.dto.picture.PictureUpdateRequest;
 import com.jige.jigepicturebackend.model.dto.picture.PictureUploadRequest;
 import com.jige.jigepicturebackend.model.entity.Picture;
@@ -102,16 +105,68 @@ public class PictureController {
     }
 
     /**
+     * 根据 id 获取图片（仅管理员可用）
+     */
+    @GetMapping("/get")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<Picture> getPictureById(Long id, HttpServletRequest request) {
+        ThrowUtils.throwIf(id <= 0, ErrorCode.PARAMS_ERROR);
+        // 查询数据库
+        Picture picture = pictureService.getById(id);
+        ThrowUtils.throwIf(picture == null, ErrorCode.NOT_FOUND_ERROR);
+        // 获取封装类
+        return ResultUtils.success(picture);
+    }
+
+    /**
+     * 根据 id 获取图片（封装类）
+     */
+    @GetMapping("/get/vo")
+    public BaseResponse<PictureVO> getPictureVoById(Long id, HttpServletRequest request) {
+        ThrowUtils.throwIf(id <= 0, ErrorCode.PARAMS_ERROR);
+        // 查询数据库
+        Picture picture = pictureService.getById(id);
+        ThrowUtils.throwIf(picture == null, ErrorCode.NOT_FOUND_ERROR);
+        // 获取封装类
+        return ResultUtils.success(pictureService.getPictureVO(picture, request));
+    }
+
+    /**
+     * 分页获取图片列表（仅管理员可用）
+     */
+    @PostMapping("/list/page")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<Page<Picture>> listPictureByPage(@RequestBody PictureQueryRequest pictureQueryRequest) {
+        int current = pictureQueryRequest.getCurrent();
+        int Size = pictureQueryRequest.getPageSize();
+        // 查询数据库  
+        Page<Picture> picturePage = pictureService.page(new Page<>(current, Size), pictureService.getQueryWrapper(pictureQueryRequest));
+        return ResultUtils.success(picturePage);
+    }
+
+    /**
+     * 分页获取图片列表（封装类）
+     */
+    @PostMapping("/list/page/vo")
+    public BaseResponse<Page<PictureVO>> listPictureVoByPage(@RequestBody PictureQueryRequest pictureQueryRequest, HttpServletRequest request) {
+        int current = pictureQueryRequest.getCurrent();
+        int Size = pictureQueryRequest.getPageSize();
+        // 查询数据库
+        Page<Picture> picturePage = pictureService.page(new Page<>(current, Size), pictureService.getQueryWrapper(pictureQueryRequest));
+        return ResultUtils.success(pictureService.getPictureVOPage(picturePage, request));
+    }
+
+    /**
      * 编辑图片（给用户使用）
      */
     @PostMapping("/edit")
-    public BaseResponse<Boolean> editPicture(@RequestBody PictureEditRequest pictureEditRequest,HttpServletRequest request){
-        if (pictureEditRequest==null||pictureEditRequest.getId()<=0){
+    public BaseResponse<Boolean> editPicture(@RequestBody PictureEditRequest pictureEditRequest, HttpServletRequest request) {
+        if (pictureEditRequest == null || pictureEditRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         //在此处将实体类与DTO进行转换
         Picture picture = new Picture();
-        BeanUtils.copyProperties(pictureEditRequest,picture);
+        BeanUtils.copyProperties(pictureEditRequest, picture);
         //注意要将list转为string
         picture.setTags(JSONUtil.toJsonStr(pictureEditRequest.getTags()));
         //设置编辑时间
@@ -122,14 +177,14 @@ public class PictureController {
         //判断是否存在
         Long id = pictureEditRequest.getId();
         Picture oldPicture = pictureService.getById(id);
-        ThrowUtils.throwIf(oldPicture==null,ErrorCode.NOT_FOUND_ERROR);
+        ThrowUtils.throwIf(oldPicture == null, ErrorCode.NOT_FOUND_ERROR);
         //仅本人或管理员可编辑
-        if (!oldPicture.getUserId().equals(loginUser.getId())||!loginUser.getUserRole().equals(UserConstant.ADMIN_ROLE)){
+        if (!oldPicture.getUserId().equals(loginUser.getId()) || !loginUser.getUserRole().equals(UserConstant.ADMIN_ROLE)) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
         }
         //操作数据库
         boolean result = pictureService.updateById(picture);
-        ThrowUtils.throwIf(!result,ErrorCode.OPERATION_ERROR);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         return ResultUtils.success(true);
     }
 
@@ -137,7 +192,7 @@ public class PictureController {
      * 获取预置标签和分类
      */
     @GetMapping("/tag_category")
-    public BaseResponse<PictureTagCategory> listPictureTagCategory(){
+    public BaseResponse<PictureTagCategory> listPictureTagCategory() {
         PictureTagCategory pictureTagCategory = new PictureTagCategory();
         List<String> tagList = Arrays.asList("热门", "搞笑", "生活", "高清", "艺术", "校园", "背景", "简历", "创意");
         List<String> categoryList = Arrays.asList("模板", "电商", "表情包", "素材", "海报");
