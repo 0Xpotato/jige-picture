@@ -129,6 +129,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         Integer reviewStatus = pictureQueryRequest.getReviewStatus();
         String reviewMessage = pictureQueryRequest.getReviewMessage();
         Long reviewerId = pictureQueryRequest.getReviewerId();
+        String sortField = pictureQueryRequest.getSortField();
+        String sortOrder = pictureQueryRequest.getSortOrder();
         // 从多字段中搜索
         if (StrUtil.isNotBlank(searchText)) {
             // 需要拼接查询条件
