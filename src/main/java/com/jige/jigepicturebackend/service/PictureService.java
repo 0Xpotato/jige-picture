@@ -3,6 +3,7 @@ package com.jige.jigepicturebackend.service;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.jige.jigepicturebackend.model.dto.picture.PictureQueryRequest;
+import com.jige.jigepicturebackend.model.dto.picture.PictureReviewRequest;
 import com.jige.jigepicturebackend.model.dto.picture.PictureUploadRequest;
 import com.jige.jigepicturebackend.model.entity.Picture;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -53,5 +54,21 @@ public interface PictureService extends IService<Picture> {
      */
     Page<PictureVO> getPictureVOPage(Page<Picture> picturePage, HttpServletRequest request);
 
+    /**
+     * 校验图片
+     * @param picture
+     */
     void validPicture(Picture picture);
+
+    /**
+     * 图片审核
+     * @param pictureReviewRequest
+     * @param loginUser
+     */
+    void doPictureReview(PictureReviewRequest pictureReviewRequest,User loginUser);
+
+    /**
+     * 管理员自动过审并且填充审核参数
+     */
+    void fillReviewParams(Picture picture,User loginUser);
 }
