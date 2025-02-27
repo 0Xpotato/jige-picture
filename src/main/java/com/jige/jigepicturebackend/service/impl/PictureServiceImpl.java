@@ -258,7 +258,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         }
         // 更新审核状态
         Picture picture = new Picture();
-        BeanUtils.copyProperties(oldPicture, picture);
+        BeanUtils.copyProperties(pictureReviewRequest, picture);
         picture.setReviewerId(loginUser.getId());
         picture.setReviewTime(new Date());
         boolean result = this.updateById(picture);
