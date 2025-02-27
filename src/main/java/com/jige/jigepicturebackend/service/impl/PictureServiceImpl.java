@@ -17,7 +17,7 @@ import com.jige.jigepicturebackend.model.dto.picture.PictureReviewRequest;
 import com.jige.jigepicturebackend.model.dto.picture.PictureUploadRequest;
 import com.jige.jigepicturebackend.model.entity.Picture;
 import com.jige.jigepicturebackend.model.entity.User;
-import com.jige.jigepicturebackend.model.enums.PictureReviewEnum;
+import com.jige.jigepicturebackend.model.enums.PictureReviewStatusEnum;
 import com.jige.jigepicturebackend.model.vo.PictureVO;
 import com.jige.jigepicturebackend.model.vo.UserVO;
 import com.jige.jigepicturebackend.service.PictureService;
@@ -245,8 +245,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     public void doPictureReview(PictureReviewRequest pictureReviewRequest, User loginUser) {
         Long id = pictureReviewRequest.getId();
         Integer reviewStatus = pictureReviewRequest.getReviewStatus();
-        PictureReviewEnum reviewStatusEnum = PictureReviewEnum.getEnumByValue(reviewStatus);
-        if (id == null || reviewStatusEnum == null || PictureReviewEnum.REVIEWING.equals(reviewStatusEnum)) {
+        PictureReviewStatusEnum reviewStatusEnum = PictureReviewStatusEnum.getEnumByValue(reviewStatus);
+        if (id == null || reviewStatusEnum == null || PictureReviewStatusEnum.REVIEWING.equals(reviewStatusEnum)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         //判断是否存在
@@ -277,11 +277,11 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         if (userService.isAdmin(loginUser)) {
             picture.setReviewTime(new Date());
             picture.setReviewerId(loginUser.getId());
-            picture.setReviewStatus(PictureReviewEnum.PASS.getValue());
+            picture.setReviewStatus(PictureReviewStatusEnum.PASS.getValue());
             picture.setReviewMessage("管理员自动过审");
         } else {
             // 非管理员，创建或编辑都要改为待审核
-            picture.setReviewStatus(PictureReviewEnum.REVIEWING.getValue());
+            picture.setReviewStatus(PictureReviewStatusEnum.REVIEWING.getValue());
         }
     }
 }

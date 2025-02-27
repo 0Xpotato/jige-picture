@@ -14,7 +14,7 @@ import com.jige.jigepicturebackend.exception.ThrowUtils;
 import com.jige.jigepicturebackend.model.dto.picture.*;
 import com.jige.jigepicturebackend.model.entity.Picture;
 import com.jige.jigepicturebackend.model.entity.User;
-import com.jige.jigepicturebackend.model.enums.PictureReviewEnum;
+import com.jige.jigepicturebackend.model.enums.PictureReviewStatusEnum;
 import com.jige.jigepicturebackend.model.vo.PictureTagCategory;
 import com.jige.jigepicturebackend.model.vo.PictureVO;
 import com.jige.jigepicturebackend.service.PictureService;
@@ -43,7 +43,6 @@ public class PictureController {
     /**
      * 上传图片（可重新上传）
      */
-    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     @PostMapping("/upload")
     public BaseResponse<PictureVO> uploadPicture(@RequestPart("file") MultipartFile multipartFile, PictureUploadRequest pictureUploadRequest, HttpServletRequest request) {
         User loginUser = userService.getLoginUser(request);
@@ -155,7 +154,7 @@ public class PictureController {
         //限制爬虫
         ThrowUtils.throwIf(Size>20, ErrorCode.PARAMS_ERROR);
         // 补充审核参数
-        pictureQueryRequest.setReviewStatus(PictureReviewEnum.PASS.getValue());
+        pictureQueryRequest.setReviewStatus(PictureReviewStatusEnum.PASS.getValue());
         // 查询数据库
         Page<Picture> picturePage = pictureService.page(new Page<>(current, Size), pictureService.getQueryWrapper(pictureQueryRequest));
         return ResultUtils.success(pictureService.getPictureVOPage(picturePage, request));
@@ -184,7 +183,7 @@ public class PictureController {
         Picture oldPicture = pictureService.getById(id);
         ThrowUtils.throwIf(oldPicture == null, ErrorCode.NOT_FOUND_ERROR);
         //仅本人或管理员可编辑
-        if (!oldPicture.getUserId().equals(loginUser.getId()) || !loginUser.getUserRole().equals(UserConstant.ADMIN_ROLE)) {
+        if (!oldPicture.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
         }
         // 补充审核参数
