@@ -1,5 +1,6 @@
 package com.jige.jigepicturebackend.manager.upload;
 
+import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpStatus;
@@ -31,7 +32,7 @@ public class UrlPictureUpload extends PictureUploadTemplate{
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "文件地址格式不正确");
         }
         //2.校验URL协议
-        ThrowUtils.throwIf(!fileUrl.startsWith("http://") || fileUrl.startsWith("https://"), ErrorCode.PARAMS_ERROR, "仅支持HTTP或HTTPS协议的文件地址");
+        ThrowUtils.throwIf(!(fileUrl.startsWith("http://") || fileUrl.startsWith("https://")), ErrorCode.PARAMS_ERROR, "仅支持HTTP或HTTPS协议的文件地址");
         //3.发送HEAD请求以验证文件是否存在
         HttpResponse response = null;
         try {
@@ -76,7 +77,6 @@ public class UrlPictureUpload extends PictureUploadTemplate{
     @Override
     protected String getOriginalFilename(Object inputSource) {
         String fileUrl = (String) inputSource;
-        // 从 URL 中提取文件名
-        return getOriginalFilename(fileUrl);
+        return FileUtil.mainName(fileUrl);
     }
 }

@@ -8,7 +8,6 @@ import com.jige.jigepicturebackend.config.CosClientConfig;
 import com.jige.jigepicturebackend.exception.BusinessException;
 import com.jige.jigepicturebackend.exception.ErrorCode;
 import com.jige.jigepicturebackend.manager.CosManager;
-import com.jige.jigepicturebackend.manager.FileManager;
 import com.jige.jigepicturebackend.model.dto.file.UploadPictureResult;
 import com.qcloud.cos.model.PutObjectResult;
 import com.qcloud.cos.model.ciModel.persistence.ImageInfo;
@@ -23,9 +22,6 @@ import java.util.Date;
 public abstract class PictureUploadTemplate {
     @Resource
     private CosManager cosManager;
-
-    @Resource
-    private FileManager fileManager;
 
     @Resource
     private CosClientConfig cosClientConfig;
