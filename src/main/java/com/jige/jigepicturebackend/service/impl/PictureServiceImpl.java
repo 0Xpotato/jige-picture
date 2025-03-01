@@ -349,12 +349,15 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
             }
             //图片批量创建时，给图片名称
             String namePrefix = pictureUploadByBatchRequest.getNamePrefix();
-            if (StrUtil.isBlank(namePrefix)){
-                namePrefix=searchText;
+            if (StrUtil.isBlank(namePrefix)) {
+                // 设置图片名称
+                namePrefix = searchText;
             }
+            // 上传图片
             PictureUploadRequest pictureUploadRequest = new PictureUploadRequest();
-            if (StrUtil.isNotBlank(namePrefix)){
-                pictureUploadRequest.setPicName(namePrefix+(uploadCount+1));
+            if (StrUtil.isNotBlank(namePrefix)) {
+                // 设置图片名称，序号连续递增
+                pictureUploadRequest.setPicName(namePrefix + (uploadCount + 1));
             }
             try {
                 PictureVO pictureVO = this.uploadPicture(fileUrl, pictureUploadRequest, loginUser);
