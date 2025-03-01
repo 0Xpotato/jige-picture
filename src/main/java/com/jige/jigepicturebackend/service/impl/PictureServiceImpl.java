@@ -97,7 +97,12 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
         //构造要入库的图片信息
         Picture picture = new Picture();
         picture.setUrl(uploadPictureResult.getUrl());
-        picture.setName(uploadPictureResult.getPicName());
+        //获取到要手动设置的图片名称，而不是完全依赖于解析的结果
+        String picName = uploadPictureResult.getPicName();
+        if (pictureUploadRequest != null && StrUtil.isNotBlank(pictureUploadRequest.getPicName())) {
+            picName = pictureUploadRequest.getPicName();
+        }
+        picture.setName(picName);
         picture.setPicSize(uploadPictureResult.getPicSize());
         picture.setPicWidth(uploadPictureResult.getPicWidth());
         picture.setPicHeight(uploadPictureResult.getPicHeight());
@@ -300,9 +305,10 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
 
     /**
      * 批量抓取和创建图片
+     *
      * @param pictureUploadByBatchRequest
      * @param loginUser
-     * @return  创建的图片数量
+     * @return 创建的图片数量
      */
     @Override
     public int uploadPictureByBatch(PictureUploadByBatchRequest pictureUploadByBatchRequest, User loginUser) {
@@ -324,7 +330,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
         if (ObjUtil.isNull(div)) {
             throw new BusinessException(ErrorCode.OPERATION_ERROR, "获取元素失败");
         }
-        Elements imgElementList = div.select("img.ming");
+        Elements imgElementList = div.select("img.mimg");
         //统计批量抓取后上传的图片数量
         int uploadCount = 0;
         for (Element imgElement : imgElementList) {
@@ -341,7 +347,15 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
             if (questionOfMarkIndex > -1) {
                 fileUrl = fileUrl.substring(0, questionOfMarkIndex);
             }
+            //图片批量创建时，给图片名称
+            String namePrefix = pictureUploadByBatchRequest.getNamePrefix();
+            if (StrUtil.isBlank(namePrefix)){
+                namePrefix=searchText;
+            }
             PictureUploadRequest pictureUploadRequest = new PictureUploadRequest();
+            if (StrUtil.isNotBlank(namePrefix)){
+                pictureUploadRequest.setPicName(namePrefix+(uploadCount+1));
+            }
             try {
                 PictureVO pictureVO = this.uploadPicture(fileUrl, pictureUploadRequest, loginUser);
                 log.info("图片上传成功,id={}", pictureVO.getId());

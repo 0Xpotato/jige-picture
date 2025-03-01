@@ -13,4 +13,9 @@ public class PictureUploadByBatchRequest {
      * 搜索数量
      */
     private Integer count = 10;
+
+    /**
+     * 名称前缀
+     */
+    private String namePrefix;
 }
