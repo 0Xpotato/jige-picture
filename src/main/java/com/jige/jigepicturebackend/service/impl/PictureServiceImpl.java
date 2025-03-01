@@ -9,7 +9,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.jige.jigepicturebackend.exception.BusinessException;
 import com.jige.jigepicturebackend.exception.ErrorCode;
 import com.jige.jigepicturebackend.exception.ThrowUtils;
-import com.jige.jigepicturebackend.manager.FileManager;
 import com.jige.jigepicturebackend.manager.upload.FilePictureUpload;
 import com.jige.jigepicturebackend.manager.upload.PictureUploadTemplate;
 import com.jige.jigepicturebackend.manager.upload.UrlPictureUpload;
@@ -17,6 +16,7 @@ import com.jige.jigepicturebackend.mapper.PictureMapper;
 import com.jige.jigepicturebackend.model.dto.file.UploadPictureResult;
 import com.jige.jigepicturebackend.model.dto.picture.PictureQueryRequest;
 import com.jige.jigepicturebackend.model.dto.picture.PictureReviewRequest;
+import com.jige.jigepicturebackend.model.dto.picture.PictureUploadByBatchRequest;
 import com.jige.jigepicturebackend.model.dto.picture.PictureUploadRequest;
 import com.jige.jigepicturebackend.model.entity.Picture;
 import com.jige.jigepicturebackend.model.entity.User;
@@ -25,13 +25,17 @@ import com.jige.jigepicturebackend.model.vo.PictureVO;
 import com.jige.jigepicturebackend.model.vo.UserVO;
 import com.jige.jigepicturebackend.service.PictureService;
 import com.jige.jigepicturebackend.service.UserService;
+import lombok.extern.slf4j.Slf4j;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +48,7 @@ import java.util.stream.Collectors;
  * @createDate 2025-02-22 11:24:13
  */
 @Service
+@Slf4j
 public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> implements PictureService {
 
     @Resource
@@ -291,6 +296,64 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
             // 非管理员，创建或编辑都要改为待审核
             picture.setReviewStatus(PictureReviewStatusEnum.REVIEWING.getValue());
         }
+    }
+
+    /**
+     * 批量抓取和创建图片
+     * @param pictureUploadByBatchRequest
+     * @param loginUser
+     * @return  创建的图片数量
+     */
+    @Override
+    public int uploadPictureByBatch(PictureUploadByBatchRequest pictureUploadByBatchRequest, User loginUser) {
+        //获取要批量创建的 图片名称 和 图片数量
+        Integer count = pictureUploadByBatchRequest.getCount();
+        String searchText = pictureUploadByBatchRequest.getSearchText();
+        ThrowUtils.throwIf(count > 30, ErrorCode.PARAMS_ERROR, "最多上传30张图片");
+        //要抓取的地址，这里是从 "https://cn.bing.com/images/async?q=%s&mmasync=1" 获取图片
+        //根据 searchText 构建一个 Bing 图片搜索的 URL
+        String fetchUrl = String.format("https://cn.bing.com/images/async?q=%s&mmasync=1", searchText);
+        Document document;
+        try {
+            document = Jsoup.connect(fetchUrl).get();
+        } catch (IOException e) {
+            log.error("获取页面失败:" + e);
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "获取页面失败");
+        }
+        Element div = document.getElementsByClass("dgControl").first();
+        if (ObjUtil.isNull(div)) {
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "获取元素失败");
+        }
+        Elements imgElementList = div.select("img.ming");
+        //统计批量抓取后上传的图片数量
+        int uploadCount = 0;
+        for (Element imgElement : imgElementList) {
+/*            //阻塞等待一段1s，减少服务器被封禁的概率
+            Thread.sleep(1000);*/
+            //获取图片的上传路径
+            String fileUrl = imgElement.attr("src");
+            if (StrUtil.isBlank(fileUrl)) {
+                log.info("当前链接为空，已跳过{}", fileUrl);
+                continue;
+            }
+            // 处理图片上传地址，防止出现转义问题
+            int questionOfMarkIndex = fileUrl.indexOf('?');
+            if (questionOfMarkIndex > -1) {
+                fileUrl = fileUrl.substring(0, questionOfMarkIndex);
+            }
+            PictureUploadRequest pictureUploadRequest = new PictureUploadRequest();
+            try {
+                PictureVO pictureVO = this.uploadPicture(fileUrl, pictureUploadRequest, loginUser);
+                log.info("图片上传成功,id={}", pictureVO.getId());
+                uploadCount++;
+            } catch (Exception e) {
+                log.error("图片上传失败", e);
+            }
+            if (uploadCount >= count) {
+                break;
+            }
+        }
+        return uploadCount;
     }
 }
 

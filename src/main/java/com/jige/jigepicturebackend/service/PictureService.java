@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.jige.jigepicturebackend.model.dto.picture.PictureQueryRequest;
 import com.jige.jigepicturebackend.model.dto.picture.PictureReviewRequest;
+import com.jige.jigepicturebackend.model.dto.picture.PictureUploadByBatchRequest;
 import com.jige.jigepicturebackend.model.dto.picture.PictureUploadRequest;
 import com.jige.jigepicturebackend.model.entity.Picture;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -71,4 +72,12 @@ public interface PictureService extends IService<Picture> {
      * 管理员自动过审并且填充审核参数
      */
     void fillReviewParams(Picture picture,User loginUser);
+
+    /**
+     * 批量抓取和创建图片
+     * @param pictureUploadByBatchRequest
+     * @param loginUser
+     * @return 成功创建的图片数
+     */
+    int uploadPictureByBatch(PictureUploadByBatchRequest pictureUploadByBatchRequest,User loginUser);
 }
