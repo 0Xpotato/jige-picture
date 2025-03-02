@@ -54,6 +54,8 @@ public abstract class PictureUploadTemplate {
             ImageInfo imageInfo = putObjectResult.getCiUploadResult().getOriginalInfo().getImageInfo();
             ProcessResults processResults = putObjectResult.getCiUploadResult().getProcessResults();
             List<CIObject> objectList = processResults.getObjectList();
+            // 删除原图
+            cosManager.deleteObject(uploadPath);
             if (CollUtil.isNotEmpty(objectList)){
                 CIObject compressedCIObject = objectList.get(0);
                 // 封装压缩图返回结果

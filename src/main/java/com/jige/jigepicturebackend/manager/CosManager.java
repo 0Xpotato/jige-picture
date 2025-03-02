@@ -3,10 +3,7 @@ package com.jige.jigepicturebackend.manager;
 import cn.hutool.core.io.FileUtil;
 import com.jige.jigepicturebackend.config.CosClientConfig;
 import com.qcloud.cos.COSClient;
-import com.qcloud.cos.model.COSObject;
-import com.qcloud.cos.model.GetObjectRequest;
-import com.qcloud.cos.model.PutObjectRequest;
-import com.qcloud.cos.model.PutObjectResult;
+import com.qcloud.cos.model.*;
 import com.qcloud.cos.model.ciModel.persistence.PicOperations;
 import org.springframework.stereotype.Component;
 
@@ -45,6 +42,16 @@ public class CosManager {
     public COSObject getObject(String key) {
         GetObjectRequest getObjectRequest = new GetObjectRequest(cosClientConfig.getBucket(), key);
         return cosClient.getObject(getObjectRequest);
+    }
+
+    /**
+     * 下载对象
+     *
+     * @param key 唯一键
+     */
+    public void deleteObject(String key) {
+        DeleteObjectRequest deleteObjectRequest = new DeleteObjectRequest(cosClientConfig.getBucket(), key);
+        cosClient.deleteObject(deleteObjectRequest);
     }
 
 /*    *//**
