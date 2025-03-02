@@ -22,6 +22,14 @@ spring:
     multipart:
       #      最大可上传的文件大小
       max-file-size: 10MB
+  #      redis配置
+  redis:
+    database: 0
+    host: 127.0.0.1
+    port: 6379
+    #    redis缓存失效时间为5分钟
+    timeout: 5000
+
 
 mybatis-plus:
   configuration:
