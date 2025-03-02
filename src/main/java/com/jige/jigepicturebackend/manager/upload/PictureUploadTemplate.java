@@ -40,8 +40,7 @@ public abstract class PictureUploadTemplate {
         // 2.图片上传地址
         String uuid = RandomUtil.randomString(16);
         String originFilename = getOriginalFilename(inputSource);
-        String uploadFilename = String.format("%s_%s.%s", DateUtil.formatDate(new Date()), uuid,
-                FileUtil.getSuffix(originFilename));
+        String uploadFilename = String.format("%s_%s.%s", DateUtil.formatDate(new Date()), uuid, FileUtil.getSuffix(originFilename));
         String uploadPath = String.format("/%s/%s", uploadPathPrefix, uploadFilename);
         File file = null;
         try {
@@ -56,11 +55,16 @@ public abstract class PictureUploadTemplate {
             List<CIObject> objectList = processResults.getObjectList();
             // 删除原图，只保留缩略图，节省压缩空间
             cosManager.deleteObject(uploadPath);
-            if (CollUtil.isNotEmpty(objectList)){
+            if (CollUtil.isNotEmpty(objectList)) {
                 CIObject compressedCiObject = objectList.get(0);
-                CIObject thumbnailCiObject = objectList.get(1);
+                // 缩略图默认等于压缩图
+                CIObject thumbnailCiObject = compressedCiObject;
+                if (objectList.size() > 1) {
+                    // 如果生成缩略图，才得到缩略图
+                    thumbnailCiObject = objectList.get(1);
+                }
                 // 封装压缩图返回结果
-                return buildResult(originFilename,compressedCiObject,thumbnailCiObject);
+                return buildResult(originFilename, compressedCiObject, thumbnailCiObject);
             }
             // 5.封装返回结果
             return buildResult(originFilename, file, uploadPath, imageInfo);
@@ -114,6 +118,7 @@ public abstract class PictureUploadTemplate {
             log.error("file delete error, filepath = {}", file.getAbsolutePath());
         }
     }
+
     private UploadPictureResult buildResult(String originFilename, CIObject compressedCiObject, CIObject thumbnailCiObject) {
         UploadPictureResult uploadPictureResult = new UploadPictureResult();
         int picWidth = compressedCiObject.getWidth();
