@@ -93,8 +93,8 @@ public class CosManager {
         compressRule.setFileId(webpKey);
         compressRule.setRule("imageMogr2/format/webp");
         rules.add(compressRule);
-        // 缩略图处理，仅对 > 20 KB 的图片生成缩略图
-        if (file.length() > 2 * 1024) {
+        // 缩略图处理，仅对 > 10 KB 的图片生成缩略图    10*1024字节=10KB
+        if (file.length() > 10 * 1024) {
             PicOperations.Rule thumbnailRule = new PicOperations.Rule();
             thumbnailRule.setBucket(cosClientConfig.getBucket());
             String thumbnailKey = FileUtil.mainName(file) + "_thumbnail." + FileUtil.getSuffix(key);
