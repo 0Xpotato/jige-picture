@@ -97,6 +97,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
         //构造要入库的图片信息
         Picture picture = new Picture();
         picture.setUrl(uploadPictureResult.getUrl());
+        //设置上传后返回的缩略图地址
+        picture.setThumbnailUrl(uploadPictureResult.getThumbnailUrl());
         //获取到要手动设置的图片名称，而不是完全依赖于解析的结果
         String picName = uploadPictureResult.getPicName();
         if (pictureUploadRequest != null && StrUtil.isNotBlank(pictureUploadRequest.getPicName())) {
@@ -360,6 +362,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
                 pictureUploadRequest.setPicName(namePrefix + (uploadCount + 1));
             }
             try {
+                //调用上传图片方法
                 PictureVO pictureVO = this.uploadPicture(fileUrl, pictureUploadRequest, loginUser);
                 log.info("图片上传成功,id={}", pictureVO.getId());
                 uploadCount++;

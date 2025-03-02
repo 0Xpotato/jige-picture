@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.jige.jigepicturebackend.mapper.PictureMapper.PictureMapper">
+<mapper namespace="com.jige.jigepicturebackend.mapper.PictureMapper">
 
-    <resultMap id="BaseResultMap" type="com.jige.jigepicturebackend.model.entity.Picture.Picture">
+    <resultMap id="BaseResultMap" type="com.jige.jigepicturebackend.mapper.PictureMapper">
             <id property="id" column="id" />
             <result property="url" column="url" />
             <result property="name" column="name" />
@@ -25,12 +25,13 @@
             <result property="reviewMessage" column="reviewMessage" />
             <result property="reviewerId" column="reviewerId" />
             <result property="reviewTime" column="reviewTime" />
+            <result property="thumbnailUrl" column="thumbnailUrl" />
     </resultMap>
 
     <sql id="Base_Column_List">
         id,url,name,introduction,category,tags,
         picSize,picWidth,picHeight,picScale,picFormat,
         userId,createTime,editTime,updateTime,isDelete,
-        reviewStatus,reviewMessage,reviewerId,reviewTime
+        reviewStatus,reviewMessage,reviewerId,reviewTime,thumbnailUrl
     </sql>
 </mapper>

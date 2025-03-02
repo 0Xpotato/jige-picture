@@ -54,12 +54,13 @@ public abstract class PictureUploadTemplate {
             ImageInfo imageInfo = putObjectResult.getCiUploadResult().getOriginalInfo().getImageInfo();
             ProcessResults processResults = putObjectResult.getCiUploadResult().getProcessResults();
             List<CIObject> objectList = processResults.getObjectList();
-            // 删除原图
+            // 删除原图，只保留缩略图，节省压缩空间
             cosManager.deleteObject(uploadPath);
             if (CollUtil.isNotEmpty(objectList)){
-                CIObject compressedCIObject = objectList.get(0);
+                CIObject compressedCiObject = objectList.get(0);
+                CIObject thumbnailCiObject = objectList.get(1);
                 // 封装压缩图返回结果
-                return buildResult(originFilename,compressedCIObject);
+                return buildResult(originFilename,compressedCiObject,thumbnailCiObject);
             }
             // 5.封装返回结果
             return buildResult(originFilename, file, uploadPath, imageInfo);
@@ -113,19 +114,21 @@ public abstract class PictureUploadTemplate {
             log.error("file delete error, filepath = {}", file.getAbsolutePath());
         }
     }
-    private UploadPictureResult buildResult(String originFilename, CIObject compressedCIObject) {
+    private UploadPictureResult buildResult(String originFilename, CIObject compressedCiObject, CIObject thumbnailCiObject) {
         UploadPictureResult uploadPictureResult = new UploadPictureResult();
-        int picWidth = compressedCIObject.getWidth();
-        int picHeight = compressedCIObject.getHeight();
+        int picWidth = compressedCiObject.getWidth();
+        int picHeight = compressedCiObject.getHeight();
         double picScale = NumberUtil.round(picWidth * 1.0 / picHeight, 2).doubleValue();
         uploadPictureResult.setPicName(FileUtil.mainName(originFilename));
         uploadPictureResult.setPicWidth(picWidth);
         uploadPictureResult.setPicHeight(picHeight);
         uploadPictureResult.setPicScale(picScale);
-        uploadPictureResult.setPicFormat(compressedCIObject.getFormat());
-        uploadPictureResult.setPicSize(compressedCIObject.getSize().longValue());
+        uploadPictureResult.setPicFormat(compressedCiObject.getFormat());
+        uploadPictureResult.setPicSize(compressedCiObject.getSize().longValue());
         // 设置图片为压缩后的地址
-        uploadPictureResult.setUrl(cosClientConfig.getHost() + "/" + compressedCIObject.getKey());
+        uploadPictureResult.setUrl(cosClientConfig.getHost() + "/" + compressedCiObject.getKey());
+        // 设置缩略图
+        uploadPictureResult.setThumbnailUrl(cosClientConfig.getHost() + "/" + thumbnailCiObject.getKey());
         return uploadPictureResult;
     }
 }
