@@ -91,9 +91,17 @@
             <version>1.15.3</version>
         </dependency>
 
+        <!--        配置redis依赖-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+
+        <!-- 本地缓存 Caffeine      java>=11以上用3版本   小于就用2版本 -->
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+            <version>3.1.8</version>
         </dependency>
     </dependencies>
 
