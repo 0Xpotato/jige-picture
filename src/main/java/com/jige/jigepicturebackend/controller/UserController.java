@@ -12,13 +12,17 @@ import com.jige.jigepicturebackend.exception.ErrorCode;
 import com.jige.jigepicturebackend.exception.ThrowUtils;
 import com.jige.jigepicturebackend.model.dto.user.*;
 import com.jige.jigepicturebackend.model.entity.User;
+import com.jige.jigepicturebackend.model.enums.UserRoleEnum;
 import com.jige.jigepicturebackend.model.vo.LoginUserVO;
+import com.jige.jigepicturebackend.model.vo.PictureTagCategory;
+import com.jige.jigepicturebackend.model.vo.UserRole;
 import com.jige.jigepicturebackend.model.vo.UserVO;
 import com.jige.jigepicturebackend.service.UserService;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -182,4 +186,16 @@ public class UserController {
         userVOPage.setRecords(userVOList);
         return ResultUtils.success(userVOPage);
     }
+
+    /**
+     * 获取用户角色列表
+     */
+    @GetMapping("/userRole")
+    public BaseResponse<UserRole> listUserRole() {
+        UserRole userRole = new UserRole();
+        List<String> userRoleList = Arrays.asList(UserRoleEnum.USER.getValue(),UserRoleEnum.ADMIN.getValue());
+        userRole.setUserRoleList(userRoleList);
+        return ResultUtils.success(userRole);
+    }
+
 }
