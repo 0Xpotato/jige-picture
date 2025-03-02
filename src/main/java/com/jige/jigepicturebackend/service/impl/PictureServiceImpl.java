@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.jige.jigepicturebackend.exception.BusinessException;
 import com.jige.jigepicturebackend.exception.ErrorCode;
 import com.jige.jigepicturebackend.exception.ThrowUtils;
+import com.jige.jigepicturebackend.manager.CosManager;
 import com.jige.jigepicturebackend.manager.upload.FilePictureUpload;
 import com.jige.jigepicturebackend.manager.upload.PictureUploadTemplate;
 import com.jige.jigepicturebackend.manager.upload.UrlPictureUpload;
@@ -31,6 +32,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -59,6 +62,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
 
     @Resource
     private UrlPictureUpload urlPictureUpload;
+    @Autowired
+    private CosManager cosManager;
 
     /**
      * 上传图片并返回封装后的图片信息
@@ -374,6 +379,30 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
             }
         }
         return uploadCount;
+    }
+
+    /**
+     * 清理图片文件
+     *
+     * @param oldPicture
+     */
+    @Async
+    @Override
+    public void clearPictureFile(Picture oldPicture) {
+        //判断该图片是否被多条记录使用
+        String pictureUrl = oldPicture.getUrl();
+        Long count = this.lambdaQuery().eq(Picture::getUrl, pictureUrl).count();
+        //若有不止一条记录使用了该图片，不清理
+        if (count > 1) {
+            return;
+        }
+        //  FIXME 注意，这里的url包含了域名，只需要传key值（存储路径）就可以
+        cosManager.deleteObject(oldPicture.getUrl());
+        //清理缩略图
+        String thumbnailUrl = oldPicture.getThumbnailUrl();
+        if (StrUtil.isNotBlank(thumbnailUrl)) {
+            cosManager.deleteObject(thumbnailUrl);
+        }
     }
 }
 
