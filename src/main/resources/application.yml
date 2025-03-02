@@ -4,6 +4,12 @@ server:
     #    指定后端接口路径
     #    localhost:8080/api
     context-path: /api
+    # 2.
+    session:
+      # cookie 30 天过期
+      #与spring-session-data-redis 库 和  spring.store-type: redis一起使用
+      cookie:
+        max-age: 2592000
 
 spring:
   #指定spring应用名称(可选)
@@ -29,7 +35,11 @@ spring:
     port: 6379
     #    redis缓存失效时间为5分钟
     timeout: 5000
-
+    # session 配置
+  session:
+    store-type: redis
+    # 1. session 30 天过期，1天24小时，1小时60分钟，1分钟60秒
+    timeout: 2592000
 
 mybatis-plus:
   configuration:

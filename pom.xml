@@ -103,6 +103,14 @@
             <artifactId>caffeine</artifactId>
             <version>3.1.8</version>
         </dependency>
+
+        <!-- Spring Session + Redis    -->
+        <!--        使用 Redis 管理 Session，更好地维护登录态-->
+        <dependency>
+            <groupId>org.springframework.session</groupId>
+            <artifactId>spring-session-data-redis</artifactId>
+        </dependency>
+
     </dependencies>
 
     <dependencyManagement>

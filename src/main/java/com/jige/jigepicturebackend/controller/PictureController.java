@@ -97,6 +97,8 @@ public class PictureController {
         if (!result) {
             throw new BusinessException(ErrorCode.OPERATION_ERROR);
         }
+        //删除关联的对象存储文件图片，包括webp格式图和缩略图
+        pictureService.clearPictureFile(oldPicture);
         return ResultUtils.success(true);
     }
 
