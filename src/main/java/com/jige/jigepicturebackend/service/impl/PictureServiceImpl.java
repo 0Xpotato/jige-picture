@@ -3,6 +3,7 @@ package com.jige.jigepicturebackend.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -16,10 +17,7 @@ import com.jige.jigepicturebackend.manager.upload.PictureUploadTemplate;
 import com.jige.jigepicturebackend.manager.upload.UrlPictureUpload;
 import com.jige.jigepicturebackend.mapper.PictureMapper;
 import com.jige.jigepicturebackend.model.dto.file.UploadPictureResult;
-import com.jige.jigepicturebackend.model.dto.picture.PictureQueryRequest;
-import com.jige.jigepicturebackend.model.dto.picture.PictureReviewRequest;
-import com.jige.jigepicturebackend.model.dto.picture.PictureUploadByBatchRequest;
-import com.jige.jigepicturebackend.model.dto.picture.PictureUploadRequest;
+import com.jige.jigepicturebackend.model.dto.picture.*;
 import com.jige.jigepicturebackend.model.entity.Picture;
 import com.jige.jigepicturebackend.model.entity.Space;
 import com.jige.jigepicturebackend.model.entity.User;
@@ -489,6 +487,30 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
         this.clearPictureFile(oldPicture);
     }
 
+
+    @Override
+    public void editPicture(PictureEditRequest pictureEditRequest, User loginUser){
+        //判断是否存在
+        Long id = pictureEditRequest.getId();
+        Picture oldPicture = this.getById(id);
+        ThrowUtils.throwIf(oldPicture==null,ErrorCode.NOT_FOUND_ERROR);
+        //在此处将实体类和DTO进行转换
+        Picture picture = new Picture();
+        BeanUtils.copyProperties(pictureEditRequest, picture);
+        //注意将list转为string
+        picture.setTags(JSONUtil.toJsonStr(pictureEditRequest.getTags()));
+        //设置编辑时间
+        picture.setEditTime(new Date());
+        //数据校验
+        this.validPicture(picture);
+        //校验权限
+        this.checkPictureAuth(picture,loginUser);
+        //补充审核参数
+        this.fillReviewParams(picture,loginUser);
+        //操作数据库
+        boolean result = this.updateById(picture);
+        ThrowUtils.throwIf(!result,ErrorCode.OPERATION_ERROR);
+    }
 }
 
 

@@ -2,10 +2,7 @@ package com.jige.jigepicturebackend.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.jige.jigepicturebackend.model.dto.picture.PictureQueryRequest;
-import com.jige.jigepicturebackend.model.dto.picture.PictureReviewRequest;
-import com.jige.jigepicturebackend.model.dto.picture.PictureUploadByBatchRequest;
-import com.jige.jigepicturebackend.model.dto.picture.PictureUploadRequest;
+import com.jige.jigepicturebackend.model.dto.picture.*;
 import com.jige.jigepicturebackend.model.entity.Picture;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.jige.jigepicturebackend.model.entity.User;
@@ -90,4 +87,6 @@ public interface PictureService extends IService<Picture> {
     void checkPictureAuth(Picture picture, User loginUser);
 
     void deletePicture(long pictureId, User loginUser);
+
+    void editPicture(PictureEditRequest pictureEditRequest, User loginUser);
 }
