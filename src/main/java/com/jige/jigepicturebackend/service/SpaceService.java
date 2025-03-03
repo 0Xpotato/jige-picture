@@ -10,4 +10,17 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface SpaceService extends IService<Space> {
 
+    /**
+     * 校验空间
+     * @param space
+     * @param add
+     */
+    void validSpace(Space space,Boolean add);
+
+    /**
+     * 根据空间等级填充空间信息,自动填充限额数据
+     * @param space
+     */
+    void fillSpaceBySpaceLevel(Space space);
+
 }
