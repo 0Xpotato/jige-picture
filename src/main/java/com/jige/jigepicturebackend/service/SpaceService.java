@@ -1,7 +1,9 @@
 package com.jige.jigepicturebackend.service;
 
+import com.jige.jigepicturebackend.model.dto.space.SpaceAddRequest;
 import com.jige.jigepicturebackend.model.entity.Space;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.jige.jigepicturebackend.model.entity.User;
 
 /**
 * @author Administrator
@@ -23,4 +25,12 @@ public interface SpaceService extends IService<Space> {
      */
     void fillSpaceBySpaceLevel(Space space);
 
+
+    /**
+     * 创建空间
+     * @param spaceAddRequest
+     * @param loginUser
+     * @return
+     */
+    long addSpace(SpaceAddRequest spaceAddRequest, User loginUser);
 }
