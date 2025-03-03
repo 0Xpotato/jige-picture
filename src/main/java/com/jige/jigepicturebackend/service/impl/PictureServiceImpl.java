@@ -21,11 +21,13 @@ import com.jige.jigepicturebackend.model.dto.picture.PictureReviewRequest;
 import com.jige.jigepicturebackend.model.dto.picture.PictureUploadByBatchRequest;
 import com.jige.jigepicturebackend.model.dto.picture.PictureUploadRequest;
 import com.jige.jigepicturebackend.model.entity.Picture;
+import com.jige.jigepicturebackend.model.entity.Space;
 import com.jige.jigepicturebackend.model.entity.User;
 import com.jige.jigepicturebackend.model.enums.PictureReviewStatusEnum;
 import com.jige.jigepicturebackend.model.vo.PictureVO;
 import com.jige.jigepicturebackend.model.vo.UserVO;
 import com.jige.jigepicturebackend.service.PictureService;
+import com.jige.jigepicturebackend.service.SpaceService;
 import com.jige.jigepicturebackend.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
@@ -33,7 +35,6 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -63,10 +64,15 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
 
     @Resource
     private UrlPictureUpload urlPictureUpload;
-    @Autowired
+
+    @Resource
     private CosManager cosManager;
-    @Autowired
+
+    @Resource
     private CosClientConfig cosClientConfig;
+
+    @Resource
+    private SpaceService spaceService;
 
     /**
      * 上传图片并返回封装后的图片信息
@@ -78,7 +84,17 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
      */
     @Override
     public PictureVO uploadPicture(Object inputSource, PictureUploadRequest pictureUploadRequest, User loginUser) {
-        ThrowUtils.throwIf(loginUser == null, ErrorCode.NOT_LOGIN_ERROR);
+        ThrowUtils.throwIf(loginUser == null, ErrorCode.NO_AUTH_ERROR);
+        //校验空间是否存在
+        Long spaceId = pictureUploadRequest.getSpaceId();
+        if (spaceId != null) {
+            Space space = spaceService.getById(spaceId);
+            ThrowUtils.throwIf(space == null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
+            //必须空间创建人（管理员）才能上传
+            if (!space.getUserId().equals(loginUser.getId())) {
+                throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "没有空间权限");
+            }
+        }
         //用于判断是新增还是更新图片
         Long pictureId = null;
         if (pictureUploadRequest != null) {
@@ -87,15 +103,32 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
         //如果是更新图片，则需要有图片id，需要校验图片是否存在
         if (pictureId != null) {
             Picture oldPicture = this.getById(pictureId);
-            ThrowUtils.throwIf(oldPicture == null, ErrorCode.PARAMS_ERROR);
+            ThrowUtils.throwIf(oldPicture == null, ErrorCode.NOT_FOUND_ERROR, "图片不存在");
             // 仅本人或管理员可编辑,不是本人或管理员不能编辑
             if (!oldPicture.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
                 throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
             }
+            //校验空间是否一致
+            //若用户没传spaceId，则复用原有图片的spaceId
+            if (spaceId == null) {
+                if (oldPicture.getSpaceId() != null) {
+                    spaceId = oldPicture.getSpaceId();
+                } else {
+                    //若用户传了spaceId，必须和原有图片一致
+                    if (ObjUtil.notEqual(spaceId, oldPicture.getSpaceId())) {
+                        throw new BusinessException(ErrorCode.PARAMS_ERROR, "空间 id 不一致");
+                    }
+                }
+            }
         }
         //（新增）上传图片，得到信息
-        //按照用户id，划分目录
-        String uploadPathPrefix = String.format("public/%s", loginUser.getId());
+        //按照用户id，划分目录  =====>   按照空间划分目录
+        String uploadPathPrefix;
+        if (spaceId == null) {
+            uploadPathPrefix = String.format("public/%s", loginUser.getId());
+        } else {
+            uploadPathPrefix = String.format("space/%s", spaceId);
+        }
         //根据inputSource的类型区分上传方式
         PictureUploadTemplate pictureUploadTemplate = filePictureUpload;
         if (inputSource instanceof String) {
@@ -107,6 +140,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
         picture.setUrl(uploadPictureResult.getUrl());
         //设置上传后返回的缩略图地址
         picture.setThumbnailUrl(uploadPictureResult.getThumbnailUrl());
+        // 补充设置 spaceId
+        picture.setSpaceId(spaceId);
         //获取到要手动设置的图片名称，而不是完全依赖于解析的结果
         String picName = uploadPictureResult.getPicName();
         if (pictureUploadRequest != null && StrUtil.isNotBlank(pictureUploadRequest.getPicName())) {
