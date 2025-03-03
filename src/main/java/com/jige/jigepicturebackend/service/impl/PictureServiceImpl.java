@@ -122,7 +122,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
             }
         }
         //（新增）上传图片，得到信息
-        //按照用户id，划分目录  =====>   按照空间划分目录
+        //按照用户id，划分目录  =====>   如果有 spaceId，可以按照空间来划分图片上传目录。
         String uploadPathPrefix;
         if (spaceId == null) {
             uploadPathPrefix = String.format("public/%s", loginUser.getId());
@@ -448,6 +448,45 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
         }
         //  并在数据库中记录已删除状态
         this.removeById(oldPicture.getId());
+    }
+
+    /**
+     * 权限校验逻辑
+     *
+     * @param picture
+     * @param loginUser
+     */
+    @Override
+    public void checkPictureAuth(Picture picture, User loginUser) {
+        Long spaceId = picture.getSpaceId();
+        if (spaceId == null) {
+            // 公共图库，仅本人或管理员可操作
+            if (!picture.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
+                throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+            }
+        } else {
+            //私有空间，仅空间管理员（空间创建者）可操作,系统管理员也不能随意删除私有空间的图片
+            if (!picture.getUserId().equals(loginUser.getId())) {
+                throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+            }
+        }
+    }
+
+    @Override
+    public void deletePicture(long pictureId, User loginUser) {
+        ThrowUtils.throwIf(pictureId <= 0, ErrorCode.PARAMS_ERROR);
+        ThrowUtils.throwIf(loginUser == null, ErrorCode.NO_AUTH_ERROR);
+        // 判断是否存在
+        Picture oldPicture = this.getById(pictureId);
+        ThrowUtils.throwIf(oldPicture == null, ErrorCode.NOT_FOUND_ERROR);
+        // 校验权限,仅本人或管理员可删除
+        this.checkPictureAuth(oldPicture, loginUser);
+        // 操作数据库
+        boolean result = this.removeById(oldPicture);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        //  删除关联的对象存储文件图片，包括webp格式图和缩略图
+        //  异步清理文件
+        this.clearPictureFile(oldPicture);
     }
 
 }
