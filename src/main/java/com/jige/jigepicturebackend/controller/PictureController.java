@@ -274,6 +274,7 @@ public class PictureController {
      * @return
      */
     @PostMapping("/list/page/vo/cache")
+    @Deprecated
     public BaseResponse<Page<PictureVO>> listPictureVoByPageWithCache(@RequestBody PictureQueryRequest pictureQueryRequest, HttpServletRequest request) {
         int current = pictureQueryRequest.getCurrent();
         int size = pictureQueryRequest.getPageSize();
