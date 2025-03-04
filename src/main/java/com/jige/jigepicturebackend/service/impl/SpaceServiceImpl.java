@@ -1,5 +1,7 @@
 package com.jige.jigepicturebackend.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -16,6 +18,7 @@ import com.jige.jigepicturebackend.model.entity.Space;
 import com.jige.jigepicturebackend.model.entity.User;
 import com.jige.jigepicturebackend.model.enums.SpaceLevelEnum;
 import com.jige.jigepicturebackend.model.vo.SpaceVO;
+import com.jige.jigepicturebackend.model.vo.UserVO;
 import com.jige.jigepicturebackend.service.PictureService;
 import com.jige.jigepicturebackend.service.SpaceService;
 import com.jige.jigepicturebackend.service.UserService;
@@ -25,7 +28,11 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author Administrator
@@ -43,111 +50,6 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space> implements
 
     @Resource
     private PictureService pictureService;
-
-    /**
-     * 校验空间
-     *
-     * @param space
-     * @param add
-     */
-    @Override
-    public void validSpace(Space space, Boolean add) {
-        ThrowUtils.throwIf(space == null, ErrorCode.PARAMS_ERROR);
-        String spaceName = space.getSpaceName();
-        Integer spaceLevel = space.getSpaceLevel();
-        SpaceLevelEnum spaceLevelEnum = SpaceLevelEnum.getEnumByValue(spaceLevel);
-        //要创建
-        if (add) {
-            ThrowUtils.throwIf(StrUtil.isBlank(spaceName), ErrorCode.PARAMS_ERROR, "空间名称不能为空");
-            ThrowUtils.throwIf(spaceLevel == null, ErrorCode.PARAMS_ERROR, "空间级别不能为空");
-        }
-        //修改数据时，如果要修改空间级别
-        if (spaceLevel != null && spaceLevelEnum == null) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "空间级别不存在");
-        }
-        if (StrUtil.isNotBlank(spaceName) && spaceName.length() > 30) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "空间名称过长");
-        }
-    }
-
-    /**
-     * 将查询请求转换为QueryWrapper对象,获取查询对象
-     *
-     * @param spaceQueryRequest
-     * @return
-     */
-    @Override
-    public QueryWrapper<Space> getQueryWrapper(SpaceQueryRequest spaceQueryRequest) {
-
-        return null;
-    }
-
-    @Override
-    public SpaceVO getSpaceVO(Space space, HttpServletRequest request) {
-        return null;
-    }
-
-    @Override
-    public Page<SpaceVO> getSpaceVOPage(Page<Space> spacePage, HttpServletRequest request) {
-        return null;
-    }
-
-    /**
-     * 根据空间级别填充空间信息,自动填充限额数据
-     *
-     * @param space
-     */
-    @Override
-    public void fillSpaceBySpaceLevel(Space space) {
-        // 根据空间级别，自动填充限额
-        //如果空间本身没有设置限额，才会自动填充，保证了灵活性。
-        SpaceLevelEnum spaceLevelEnum = SpaceLevelEnum.getEnumByValue(space.getSpaceLevel());
-        if (spaceLevelEnum != null) {
-            long maxSize = spaceLevelEnum.getMaxSize();
-            if (space.getMaxSize() == null) {
-                space.setMaxSize(maxSize);
-            }
-            long maxCount = spaceLevelEnum.getMaxCount();
-            if (space.getMaxCount() == null) {
-                space.setMaxCount(maxCount);
-            }
-        }
-    }
-
-    /**
-     * 删除空间同时删除空间内部的所有照片
-     *
-     * @param spaceId
-     * @param loginUser
-     * @return
-     */
-    @Override
-    public boolean deleteSpace(long spaceId, User loginUser) {
-        ThrowUtils.throwIf(spaceId <= 0, ErrorCode.PARAMS_ERROR);
-        ThrowUtils.throwIf(loginUser == null, ErrorCode.NO_AUTH_ERROR);
-        // 判断是否存在
-        Space space = this.getById(spaceId);
-        ThrowUtils.throwIf(space == null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
-        // 校验权限,仅空间本人可删除
-        if (!loginUser.getId().equals(space.getUserId())) {
-            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
-        }
-        // 开启事务,删除图片后更新额度
-        transactionTemplate.execute(status -> {
-            // 操作数据库
-            boolean result = this.removeById(spaceId);
-            ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
-            // 释放额度
-            boolean update = pictureService.lambdaUpdate().eq(Picture::getSpaceId, spaceId).setSql("totalSize=0").setSql("totalCount=0").update();
-            ThrowUtils.throwIf(!update, ErrorCode.OPERATION_ERROR, "额度更新失败");
-
-            return true;
-        });
-        //  删除关联的对象存储文件图片，包括webp格式图和缩略图
-        //  异步清理文件
-//        pictureService.clearPictureFile(oldPicture);
-        return false;
-    }
 
     /**
      * 创建空间
@@ -199,6 +101,130 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space> implements
             return Optional.ofNullable(newSpaceId).orElse(-1L);
         }
     }
+
+    /**
+     * 校验空间
+     *
+     * @param space
+     * @param add
+     */
+    @Override
+    public void validSpace(Space space, Boolean add) {
+        ThrowUtils.throwIf(space == null, ErrorCode.PARAMS_ERROR);
+        String spaceName = space.getSpaceName();
+        Integer spaceLevel = space.getSpaceLevel();
+        SpaceLevelEnum spaceLevelEnum = SpaceLevelEnum.getEnumByValue(spaceLevel);
+        //要创建
+        if (add) {
+            ThrowUtils.throwIf(StrUtil.isBlank(spaceName), ErrorCode.PARAMS_ERROR, "空间名称不能为空");
+            ThrowUtils.throwIf(spaceLevel == null, ErrorCode.PARAMS_ERROR, "空间级别不能为空");
+        }
+        //修改数据时，如果要修改空间级别
+        if (spaceLevel != null && spaceLevelEnum == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "空间级别不存在");
+        }
+        if (StrUtil.isNotBlank(spaceName) && spaceName.length() > 30) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "空间名称过长");
+        }
+    }
+
+    /**
+     * 将查询请求转换为QueryWrapper对象,获取查询对象
+     *
+     * @param spaceQueryRequest
+     * @return
+     */
+    @Override
+    public QueryWrapper<Space> getQueryWrapper(SpaceQueryRequest spaceQueryRequest) {
+        QueryWrapper<Space> queryWrapper = new QueryWrapper<>();
+        if (spaceQueryRequest == null) {
+            return queryWrapper;
+        }
+        // 从对象中取值
+        Long id = spaceQueryRequest.getId();
+        Long userId = spaceQueryRequest.getUserId();
+        String spaceName = spaceQueryRequest.getSpaceName();
+        Integer spaceLevel = spaceQueryRequest.getSpaceLevel();
+        String sortField = spaceQueryRequest.getSortField();
+        String sortOrder = spaceQueryRequest.getSortOrder();
+        //拼接查询条件
+        queryWrapper.eq(ObjectUtil.isNotNull(id), "id", id);
+        queryWrapper.eq(ObjectUtil.isNotNull(userId), "userId", userId);
+        queryWrapper.eq(ObjectUtil.isNotNull(spaceLevel), "spaceLevel", spaceLevel);
+        queryWrapper.like(StrUtil.isNotBlank(spaceName), "spaceName", spaceName);
+        //排序
+        queryWrapper.orderBy(StrUtil.isNotEmpty(sortField), sortOrder.equals("ascend"), sortField);
+        return queryWrapper;
+    }
+
+    @Override
+    public SpaceVO getSpaceVO(Space space, HttpServletRequest request) {
+        // 对象转封装类
+        SpaceVO spaceVO = SpaceVO.objToVo(space);
+        // 关联查询用户信息
+        Long userId = space.getUserId();
+        if (userId != null && userId > 0) {
+            User user = userService.getById(userId);
+            UserVO userVO = userService.getUserVO(user);
+            spaceVO.setUser(userVO);
+        }
+        return spaceVO;
+    }
+
+    @Override
+    public Page<SpaceVO> getSpaceVOPage(Page<Space> spacePage, HttpServletRequest request) {
+        List<Space> spaceList = spacePage.getRecords();
+        Page<SpaceVO> spaceVOPage = new Page<>(spacePage.getCurrent(), spacePage.getSize(), spacePage.getTotal());
+        if (CollUtil.isEmpty(spaceList)) {
+            return spaceVOPage;
+        }
+        //对象列表 -》 封装对象列表
+        List<SpaceVO> spaceVOList = spaceList.stream()
+                .map(SpaceVO::objToVo)
+                .collect(Collectors.toList());
+        // 1. 关联查询用户信息
+        // 1,2,3,4
+        Set<Long> userIdSet = spaceList.stream()
+                .map(Space::getUserId)
+                .collect(Collectors.toSet());
+        // 1 => user1, 2 => user2
+        Map<Long, List<User>> userIdUserListMap = userService.listByIds(userIdSet).stream()
+                .collect(Collectors.groupingBy(User::getId));
+        // 2. 填充信息
+        spaceVOList.forEach(spaceVO -> {
+            Long userId = spaceVO.getUserId();
+            User user = null;
+            if (userIdUserListMap.containsKey(userId)) {
+                user = userIdUserListMap.get(userId).get(0);
+            }
+            spaceVO.setUser(userService.getUserVO(user));
+        });
+        spaceVOPage.setRecords(spaceVOList);
+        return spaceVOPage;
+    }
+
+    /**
+     * 根据空间级别填充空间信息,自动填充限额数据
+     *
+     * @param space
+     */
+    @Override
+    public void fillSpaceBySpaceLevel(Space space) {
+        // 根据空间级别，自动填充限额
+        //如果空间本身没有设置限额，才会自动填充，保证了灵活性。
+        SpaceLevelEnum spaceLevelEnum = SpaceLevelEnum.getEnumByValue(space.getSpaceLevel());
+        if (spaceLevelEnum != null) {
+            long maxSize = spaceLevelEnum.getMaxSize();
+            if (space.getMaxSize() == null) {
+                space.setMaxSize(maxSize);
+            }
+            long maxCount = spaceLevelEnum.getMaxCount();
+            if (space.getMaxCount() == null) {
+                space.setMaxCount(maxCount);
+            }
+        }
+    }
+
 
 }
 

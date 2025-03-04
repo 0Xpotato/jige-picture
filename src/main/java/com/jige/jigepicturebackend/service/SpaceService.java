@@ -70,11 +70,4 @@ public interface SpaceService extends IService<Space> {
      */
     void fillSpaceBySpaceLevel(Space space);
 
-    /**
-     * 删除空间同时删除空间内部的所有照片
-     * @param spaceId
-     * @param loginUser
-     * @return
-     */
-    boolean deleteSpace(long spaceId, User loginUser);
 }
