@@ -91,25 +91,25 @@
             <version>1.15.3</version>
         </dependency>
 
-        <!--        配置redis依赖-->
+<!--        &lt;!&ndash;        配置redis依赖&ndash;&gt;
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
 
-        <!-- 本地缓存 Caffeine      java>=11以上用3版本   小于就用2版本 -->
+        &lt;!&ndash; 本地缓存 Caffeine      java>=11以上用3版本   小于就用2版本 &ndash;&gt;
         <dependency>
             <groupId>com.github.ben-manes.caffeine</groupId>
             <artifactId>caffeine</artifactId>
             <version>3.1.8</version>
         </dependency>
 
-        <!-- Spring Session + Redis    -->
-        <!--        使用 Redis 管理 Session，更好地维护登录态-->
+        &lt;!&ndash; Spring Session + Redis    &ndash;&gt;
+        &lt;!&ndash;        使用 Redis 管理 Session，更好地维护登录态&ndash;&gt;
         <dependency>
             <groupId>org.springframework.session</groupId>
             <artifactId>spring-session-data-redis</artifactId>
-        </dependency>
+        </dependency>-->
 
     </dependencies>
 

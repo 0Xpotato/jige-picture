@@ -33,8 +33,10 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -71,6 +73,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
 
     @Resource
     private SpaceService spaceService;
+    @Autowired
+    private TransactionTemplate transactionTemplate;
 
     /**
      * 上传图片并返回封装后的图片信息
@@ -111,6 +115,19 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
             if (spaceId == null) {
                 if (oldPicture.getSpaceId() != null) {
                     spaceId = oldPicture.getSpaceId();
+                    Space space = spaceService.getById(spaceId);
+                    ThrowUtils.throwIf(space == null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
+                    // 必须空间创建人（管理员）才能上传
+                    if (!space.getUserId().equals(loginUser.getId())) {
+                        throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "没有空间权限");
+                    }
+                    // 校验额度
+                    if (space.getTotalSize() >= space.getMaxSize()) {
+                        throw new BusinessException(ErrorCode.PARAMS_ERROR, "空间大小不足");
+                    }
+                    if (space.getTotalCount() >= space.getMaxCount()) {
+                        throw new BusinessException(ErrorCode.PARAMS_ERROR, "空间条数不足");
+                    }
                 } else {
                     //若用户传了spaceId，必须和原有图片一致
                     if (ObjUtil.notEqual(spaceId, oldPicture.getSpaceId())) {
@@ -160,8 +177,18 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
             picture.setId(pictureId);
             picture.setEditTime(new Date());
         }
-        boolean result = this.saveOrUpdate(picture);
-        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "图片上传失败");
+        //  开启事务 更新额度,保存图片记录
+        Long finalSpaceId = spaceId;
+        transactionTemplate.execute(status -> {
+            //操作数据库
+            boolean result = this.saveOrUpdate(picture);
+            ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "图片上传失败");
+            if (finalSpaceId != null) {
+                boolean update = spaceService.lambdaUpdate().eq(Space::getId, finalSpaceId).setSql("totalSize=totalSize+" + picture.getPicSize()).setSql("totalCount=totalCount+1").update();
+                ThrowUtils.throwIf(!update, ErrorCode.OPERATION_ERROR, "额度更新失败");
+            }
+            return picture;
+        });
         return PictureVO.objToVo(picture);
     }
 
@@ -216,7 +243,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
         queryWrapper.eq(ObjUtil.isNotEmpty(reviewerId), "reviewerId", reviewerId);
         queryWrapper.eq(ObjUtil.isNotEmpty(reviewStatus), "reviewStatus", reviewStatus);
         queryWrapper.eq(ObjUtil.isNotEmpty(spaceId), "spaceId", spaceId);
-        queryWrapper.isNull(nullSpaceId,"spaceId");
+        queryWrapper.isNull(nullSpaceId, "spaceId");
         // JSON 数组查询
         if (CollUtil.isNotEmpty(tags)) {
             for (String tag : tags) {
@@ -474,6 +501,11 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
         }
     }
 
+    /**
+     * 删除图片逻辑
+     * @param pictureId
+     * @param loginUser
+     */
     @Override
     public void deletePicture(long pictureId, User loginUser) {
         ThrowUtils.throwIf(pictureId <= 0, ErrorCode.PARAMS_ERROR);
@@ -483,21 +515,35 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
         ThrowUtils.throwIf(oldPicture == null, ErrorCode.NOT_FOUND_ERROR);
         // 校验权限,仅本人或管理员可删除
         this.checkPictureAuth(oldPicture, loginUser);
-        // 操作数据库
-        boolean result = this.removeById(oldPicture);
-        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        // 开启事务,删除图片后更新额度
+        transactionTemplate.execute(status -> {
+            // 操作数据库
+            boolean result = this.removeById(oldPicture);
+            ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+            // 释放额度
+            Long spaceId = oldPicture.getSpaceId();
+            if (spaceId != null) {
+                boolean update = spaceService.lambdaUpdate().eq(Space::getId, spaceId).setSql("totalSize=totalSize-" + oldPicture.getPicSize()).setSql("totalCount=totalCount-1").update();
+                ThrowUtils.throwIf(!update, ErrorCode.OPERATION_ERROR, "额度更新失败");
+            }
+            return true;
+        });
         //  删除关联的对象存储文件图片，包括webp格式图和缩略图
         //  异步清理文件
         this.clearPictureFile(oldPicture);
     }
 
-
+    /**
+     * 编辑图片逻辑
+     * @param pictureEditRequest
+     * @param loginUser
+     */
     @Override
-    public void editPicture(PictureEditRequest pictureEditRequest, User loginUser){
+    public void editPicture(PictureEditRequest pictureEditRequest, User loginUser) {
         //判断是否存在
         Long id = pictureEditRequest.getId();
         Picture oldPicture = this.getById(id);
-        ThrowUtils.throwIf(oldPicture==null,ErrorCode.NOT_FOUND_ERROR);
+        ThrowUtils.throwIf(oldPicture == null, ErrorCode.NOT_FOUND_ERROR);
         //在此处将实体类和DTO进行转换
         Picture picture = new Picture();
         BeanUtils.copyProperties(pictureEditRequest, picture);
@@ -508,12 +554,12 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
         //数据校验
         this.validPicture(picture);
         //校验权限
-        this.checkPictureAuth(picture,loginUser);
+        this.checkPictureAuth(picture, loginUser);
         //补充审核参数
-        this.fillReviewParams(picture,loginUser);
+        this.fillReviewParams(picture, loginUser);
         //操作数据库
         boolean result = this.updateById(picture);
-        ThrowUtils.throwIf(!result,ErrorCode.OPERATION_ERROR);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
     }
 }
 
