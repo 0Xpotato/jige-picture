@@ -48,8 +48,6 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space> implements
     @Resource
     private TransactionTemplate transactionTemplate;
 
-    @Resource
-    private PictureService pictureService;
 
     /**
      * 创建空间

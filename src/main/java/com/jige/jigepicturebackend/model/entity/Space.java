@@ -1,9 +1,6 @@
 package com.jige.jigepicturebackend.model.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -22,7 +19,7 @@ public class Space implements Serializable {
     /**
      * id
      */
-    @TableId(type = IdType.AUTO)
+    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
 
     /**
@@ -78,6 +75,7 @@ public class Space implements Serializable {
     /**
      * 是否删除
      */
+    @TableLogic
     private Integer isDelete;
 
     @TableField(exist = false)

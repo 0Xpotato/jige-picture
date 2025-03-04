@@ -19,7 +19,6 @@ import com.jige.jigepicturebackend.model.entity.User;
 import com.jige.jigepicturebackend.model.enums.SpaceLevelEnum;
 import com.jige.jigepicturebackend.model.vo.SpaceLevel;
 import com.jige.jigepicturebackend.model.vo.SpaceVO;
-import com.jige.jigepicturebackend.service.PictureService;
 import com.jige.jigepicturebackend.service.SpaceService;
 import com.jige.jigepicturebackend.service.UserService;
 import org.springframework.beans.BeanUtils;
