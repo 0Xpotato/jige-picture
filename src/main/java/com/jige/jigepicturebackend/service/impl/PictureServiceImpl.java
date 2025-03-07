@@ -152,9 +152,9 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
         UploadPictureResult uploadPictureResult = pictureUploadTemplate.uploadPicture(inputSource, uploadPathPrefix);
         //构造要入库的图片信息
         Picture picture = new Picture();
-        picture.setUrl(uploadPictureResult.getUrl());
+        picture.setUrl(uploadPictureResult.getThumbnailUrl());
         //设置上传后返回的缩略图地址
-        picture.setThumbnailUrl(uploadPictureResult.getThumbnailUrl());
+        picture.setThumbnailUrl(uploadPictureResult.getUrl());
         // 补充设置 spaceId
         picture.setSpaceId(spaceId);
         //获取到要手动设置的图片名称，而不是完全依赖于解析的结果
