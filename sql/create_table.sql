@@ -1,5 +1,5 @@
 # 创建库
-create database jige_picture;
+create database if not exists jige_picture;
 use jige_picture;
 -- 用户表
 create table if not exists user
