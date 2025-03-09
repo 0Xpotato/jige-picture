@@ -376,7 +376,7 @@ public class PictureController {
     }
 
     /**
-     * 批量编辑图片接口
+     * 批量编辑图片接口(图片分类，标签，名称)
      * @param pictureEditByBatchRequest
      * @param request
      * @return
