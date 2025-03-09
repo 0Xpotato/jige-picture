@@ -37,6 +37,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.Resource;
@@ -45,13 +46,11 @@ import java.awt.*;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
 
-/**
- * @author Administrator
- * @description 针对表【picture(图片)】的数据库操作Service实现
- * @createDate 2025-02-22 11:24:13
- */
+
 @Service
 @Slf4j
 public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> implements PictureService {
@@ -75,6 +74,9 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
     private SpaceService spaceService;
     @Autowired
     private TransactionTemplate transactionTemplate;
+
+    @Resource
+    private ThreadPoolExecutor customExecutor;
 
     /**
      * 上传图片并返回封装后的图片信息
@@ -247,8 +249,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
         queryWrapper.eq(ObjUtil.isNotEmpty(reviewStatus), "reviewStatus", reviewStatus);
         queryWrapper.eq(ObjUtil.isNotEmpty(spaceId), "spaceId", spaceId);
         queryWrapper.isNull(nullSpaceId, "spaceId");
-        queryWrapper.ge(ObjUtil.isNotEmpty(startEditTime),"editTime",startEditTime);
-        queryWrapper.lt(ObjUtil.isNotEmpty(endEditTime),"editTime",endEditTime);
+        queryWrapper.ge(ObjUtil.isNotEmpty(startEditTime), "editTime", startEditTime);
+        queryWrapper.lt(ObjUtil.isNotEmpty(endEditTime), "editTime", endEditTime);
         // JSON 数组查询
         if (CollUtil.isNotEmpty(tags)) {
             for (String tag : tags) {
@@ -508,6 +510,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
 
     /**
      * 删除图片逻辑
+     *
      * @param pictureId
      * @param loginUser
      */
@@ -540,6 +543,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
 
     /**
      * 编辑图片逻辑
+     *
      * @param pictureEditRequest
      * @param loginUser
      */
@@ -569,6 +573,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
 
     /**
      * 根据图片主色调搜索图片
+     *
      * @param spaceId
      * @param picColor
      * @param loginUser
@@ -618,6 +623,113 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
                 .map(PictureVO::objToVo)
                 .collect(Collectors.toList());
     }
+
+    /**
+     * 批量修改图片服务，依次完成参数校验、空间权限校验、图片查询、批量更新操作
+     *
+     * @param pictureEditByBatchRequest
+     * @param loginUser
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void editPictureByBatch(PictureEditByBatchRequest pictureEditByBatchRequest, User loginUser) {
+        List<Long> pictureIdList = pictureEditByBatchRequest.getPictureIdList();
+        Long spaceId = pictureEditByBatchRequest.getSpaceId();
+        String category = pictureEditByBatchRequest.getCategory();
+        List<String> tags = pictureEditByBatchRequest.getTags();
+
+        //1.校验参数
+        ThrowUtils.throwIf(spaceId == null || CollUtil.isEmpty(pictureIdList), ErrorCode.PARAMS_ERROR);
+        ThrowUtils.throwIf(loginUser == null, ErrorCode.NO_AUTH_ERROR);
+        //2.校验空间权限
+        Space space = spaceService.getById(spaceId);
+        ThrowUtils.throwIf(space == null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
+        if (!loginUser.getId().equals(space.getUserId())) {
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "没有空间访问权限");
+        }
+
+        // 3. 查询指定图片，仅选择需要的字段
+        List<Picture> pictureList = this.lambdaQuery()
+                .select(Picture::getId, Picture::getSpaceId)
+                .eq(Picture::getSpaceId, spaceId)
+                .in(Picture::getId, pictureIdList)
+                .list();
+
+        if (pictureList.isEmpty()) {
+            return;
+        }
+
+        //4.更新分类和标签
+        pictureList.forEach(picture -> {
+            if (StrUtil.isNotBlank(category)) {
+                picture.setCategory(category);
+            }
+            if (CollUtil.isNotEmpty(tags)) {
+                picture.setTags(JSONUtil.toJsonStr(tags));
+            }
+        });
+
+
+        //5.批量更新
+        boolean result = this.updateBatchById(pictureList);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+    }
+
+
+/*
+    *//**
+     * 批量编辑图片分类和标签
+     * 处理大量数据
+     * 使用线程池 + 分批 + 并发进行优化
+     *//*
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void batchEditPictureMetadata(PictureEditByBatchRequest request,Long spaceId,Long loginUserId){
+        //参数校验
+        validateBatchEditRequest(request,spaceId,loginUserId);
+
+        //查询空间下的图片
+        List<Picture> pictureList = this.lambdaQuery()
+                .eq(Picture::getSpaceId, spaceId)
+                .in(Picture::getId, request.getPictureIdList())
+                .list();
+
+        if (pictureList.isEmpty()){
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR,"指定的图片不存在或不属于该空间");
+        }
+
+        // 分批处理避免长事务
+        int batchSize = 100;
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+        for (int i = 0; i < pictureList.size(); i += batchSize) {
+            List<Picture> batch = pictureList.subList(i, Math.min(i + batchSize, pictureList.size()));
+
+            // 异步处理每批数据
+            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                batch.forEach(picture -> {
+                    // 编辑分类和标签
+                    if (request.getCategory() != null) {
+                        picture.setCategory(request.getCategory());
+                    }
+                    if (request.getTags() != null) {
+                        picture.setTags(String.join(",", request.getTags()));
+                    }
+                });
+                boolean result = this.updateBatchById(batch);
+                if (!result) {
+                    throw new BusinessException(ErrorCode.OPERATION_ERROR, "批量更新图片失败");
+                }
+            }, customExecutor);
+
+            futures.add(future);
+        }
+
+        // 等待所有任务完成
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+    }*/
+
+
+
 }
 
 

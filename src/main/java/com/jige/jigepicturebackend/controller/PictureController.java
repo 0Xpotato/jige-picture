@@ -228,7 +228,7 @@ public class PictureController {
     }
 
     /**
-     * 获取预置标签和分类
+     * 获取预置标签和分类接口
      */
     @GetMapping("/tag_category")
     public BaseResponse<PictureTagCategory> listPictureTagCategory() {
@@ -253,7 +253,7 @@ public class PictureController {
     }
 
     /**
-     * 批量抓取和创建图片
+     * 批量抓取和创建图片接口
      */
     @PostMapping("/upload/batch")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
@@ -272,7 +272,7 @@ public class PictureController {
 
 
     /**
-     * 缓存用户查询图片列表
+     * 缓存用户查询图片列表接口
      *
      * @param pictureQueryRequest
      * @param request
@@ -359,6 +359,12 @@ public class PictureController {
         return ResultUtils.success(resultList);
     }
 
+    /**
+     * 根据图片颜色搜索图片接口
+     * @param searchPictureByColorRequest
+     * @param request
+     * @return
+     */
     @PostMapping("/search/color")
     public BaseResponse<List<PictureVO>> searchPictureByColor(@RequestBody SearchPictureByColorRequest searchPictureByColorRequest,HttpServletRequest request) {
         ThrowUtils.throwIf(searchPictureByColorRequest==null,ErrorCode.PARAMS_ERROR);
@@ -367,6 +373,20 @@ public class PictureController {
         User loginUser = userService.getLoginUser(request);
         List<PictureVO> result = pictureService.searchPictureByColor(spaceId, picColor, loginUser);
         return ResultUtils.success(result);
+    }
+
+    /**
+     * 批量编辑图片接口
+     * @param pictureEditByBatchRequest
+     * @param request
+     * @return
+     */
+    @PostMapping("/edit/batch")
+    public BaseResponse<Boolean> editPictureByBatch(@RequestBody PictureEditByBatchRequest pictureEditByBatchRequest, HttpServletRequest request){
+        ThrowUtils.throwIf(pictureEditByBatchRequest==null,ErrorCode.PARAMS_ERROR);
+        User loginUser = userService.getLoginUser(request);
+        pictureService.editPictureByBatch(pictureEditByBatchRequest,loginUser);
+        return ResultUtils.success(true);
     }
 
 }

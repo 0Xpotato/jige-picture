@@ -12,11 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
-/**
-* @author Administrator
-* @description 针对表【picture(图片)】的数据库操作Service
-* @createDate 2025-02-22 11:24:13
-*/
+
 public interface PictureService extends IService<Picture> {
 
 
@@ -114,4 +110,11 @@ public interface PictureService extends IService<Picture> {
      * @return
      */
     List<PictureVO> searchPictureByColor(Long spaceId, String picColor, User loginUser);
+
+    /**
+     * 批量修改图片服务，依次完成参数校验、空间权限校验、图片查询、批量更新操作：
+     * @param pictureEditByBatchRequest
+     * @param loginUser
+     */
+    void editPictureByBatch(PictureEditByBatchRequest pictureEditByBatchRequest, User loginUser);
 }

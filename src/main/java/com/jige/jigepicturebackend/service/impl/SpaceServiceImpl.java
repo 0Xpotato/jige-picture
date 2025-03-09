@@ -34,11 +34,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-/**
- * @author Administrator
- * @description 针对表【space(空间)】的数据库操作Service实现
- * @createDate 2025-03-03 19:58:20
- */
+
 @Service
 public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space> implements SpaceService {
 

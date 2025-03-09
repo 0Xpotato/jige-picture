@@ -10,11 +10,7 @@ import com.jige.jigepicturebackend.model.vo.UserVO;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
-/**
-* @author Administrator
-* @description 针对表【user(用户)】的数据库操作Service
-* @createDate 2025-02-17 14:56:49
-*/
+
 public interface UserService extends IService<User> {
 
     /**
