@@ -30,10 +30,9 @@ public class GetImagePageUrlApi {
         formData.put("tn", "pc");
         formData.put("from", "pc");
         formData.put("image_source", "PC_UPLOAD_URL");
-        // 获取当前时间戳
-        long uptime = System.currentTimeMillis();
+
         // 请求地址
-        String url = "https://graph.baidu.com/upload?uptime=" + uptime;
+        String url = "https://graph.baidu.com/pcpage/index?tpl_from=pc";
 
         try {
             // 2. 发送 POST 请求到百度接口
