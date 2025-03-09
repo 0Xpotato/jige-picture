@@ -75,8 +75,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
     @Autowired
     private TransactionTemplate transactionTemplate;
 
-    @Resource
-    private ThreadPoolExecutor customExecutor;
+/*    @Resource
+    private ThreadPoolExecutor customExecutor;*/
 
     /**
      * 上传图片并返回封装后的图片信息
