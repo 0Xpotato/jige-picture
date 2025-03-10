@@ -135,7 +135,7 @@ public class Picture implements Serializable {
     private String picColor;
 
     /**
-     * 以图搜图JpgOrPngUrl
+     * 以图搜图jpgUrl
      */
-    private String PngUrl;
+    private String jpgUrl;
 }

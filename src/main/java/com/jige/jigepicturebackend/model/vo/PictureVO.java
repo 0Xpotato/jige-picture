@@ -111,9 +111,9 @@ public class PictureVO implements Serializable {
     private String picColor;
 
     /**
-     * 以图搜图JpgOrPngUrl
+     * 以图搜图jpgUrl
      */
-    private String PngUrl;
+    private String jpgUrl;
 
     private static final long serialVersionUID = -8337094352041798901L;
 

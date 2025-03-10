@@ -359,7 +359,7 @@ public class PictureController {
         ThrowUtils.throwIf(oldPicture == null, ErrorCode.NOT_FOUND_ERROR);
         //搜索图片接口调用 传入的是图片的url   attention==> 需改为用的新增的jpgorpng的url success 测试通过
         //List<ImageSearchResult> resultList = ImageSearchApiFacade.searchImage(oldPicture.getUrl());
-        List<ImageSearchResult> resultList = ImageSearchApiFacade.searchImage(oldPicture.getPngUrl());
+        List<ImageSearchResult> resultList = ImageSearchApiFacade.searchImage(oldPicture.getJpgUrl());
         return ResultUtils.success(resultList);
     }
 

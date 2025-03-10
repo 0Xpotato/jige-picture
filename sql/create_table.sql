@@ -95,4 +95,4 @@ ALTER TABLE picture
 
 ALTER TABLE picture
 -- 添加新列
-    ADD COLUMN PngUrl varchar(512) NULL COMMENT '以图搜图专用 url';
+    ADD COLUMN jpgUrl varchar(512) NULL COMMENT '以图搜图专用 url';

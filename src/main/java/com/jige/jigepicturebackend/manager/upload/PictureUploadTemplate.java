@@ -145,7 +145,7 @@ public abstract class PictureUploadTemplate {
         // 设置缩略图
         uploadPictureResult.setThumbnailUrl(cosClientConfig.getHost() + "/" + thumbnailCiObject.getKey());
         //设置以图搜图url
-        uploadPictureResult.setPngUrl(cosClientConfig.getHost() + "/" + pngObject.getKey());
+        uploadPictureResult.setJpgUrl(cosClientConfig.getHost() + "/" + pngObject.getKey());
         // 返回可访问的地址
         return uploadPictureResult;
     }
