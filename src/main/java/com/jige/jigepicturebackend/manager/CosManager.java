@@ -93,6 +93,13 @@ public class CosManager {
         compressRule.setFileId(webpKey);
         compressRule.setRule("imageMogr2/format/webp");
         rules.add(compressRule);
+        // 规则2：图片压缩成 jpg 格式
+        String jpgKey = FileUtil.mainName(key) + ".png";
+        PicOperations.Rule jpgRule = new PicOperations.Rule();
+        jpgRule.setBucket(cosClientConfig.getBucket());
+        jpgRule.setRule("imageMogr2/format/png"); // 转换为 png 格式
+        jpgRule.setFileId(jpgKey);
+        rules.add(jpgRule);
         // 缩略图处理，仅对 > 10 KB 的图片生成缩略图    10*1024字节=10KB
         if (file.length() > 10 * 1024) {
             PicOperations.Rule thumbnailRule = new PicOperations.Rule();
