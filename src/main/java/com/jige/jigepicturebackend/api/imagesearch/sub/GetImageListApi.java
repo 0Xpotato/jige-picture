@@ -63,8 +63,9 @@ public class GetImageListApi {
     }
 
     public static void main(String[] args) {
-        String url = "https://graph.baidu.com/s?card_key=&entrance=GENERAL&extUiData%5BisLogoShow%5D=1&f=all&isLogoShow=1&session_id=17928256988669347004&sign=12632e97cd54acd88139901741528510&tpl_from=pc";
+        String url = "https://graph.baidu.com/ajax/pcsimi?carousel=503&entrance=GENERAL&extUiData%5BisLogoShow%5D=1&inspire=general_pc&limit=30&next=2&render_type=card&session_id=13161517727437018325&sign=12653e97cd54acd88139901741608537&tk=6042d&tpl_from=pc";
         List<ImageSearchResult> imageList = getImageList(url);
         System.out.println("搜索成功" + imageList);
     }
 }
+

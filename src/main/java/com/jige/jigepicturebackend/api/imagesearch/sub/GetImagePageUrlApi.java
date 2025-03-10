@@ -30,9 +30,11 @@ public class GetImagePageUrlApi {
         formData.put("tn", "pc");
         formData.put("from", "pc");
         formData.put("image_source", "PC_UPLOAD_URL");
+        // 获取当前时间戳
+        long uptime = System.currentTimeMillis();
 
         // 请求地址
-        String url = "https://graph.baidu.com/pcpage/index?tpl_from=pc";
+        String url = "https://graph.baidu.com/upload?uptime=" + uptime;
 
         try {
             // 2. 发送 POST 请求到百度接口
@@ -46,6 +48,7 @@ public class GetImagePageUrlApi {
             if (HttpStatus.HTTP_OK != response.getStatus()) {
                 throw new BusinessException(ErrorCode.OPERATION_ERROR, "接口调用失败");
             }
+
             // 解析响应
             String responseBody = response.body();
             Map<String, Object> result = JSONUtil.toBean(responseBody, Map.class);
@@ -76,3 +79,4 @@ public class GetImagePageUrlApi {
         System.out.println("搜索成功，结果 URL：" + result);
     }
 }
+
