@@ -72,7 +72,7 @@ public class AliYunAiApi {
         if (StrUtil.isBlank(taskId)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "任务 id 不能为空");
         }
-        try (HttpResponse httpResponse = HttpRequest.get(GET_OUT_PAINTING_TASK_URL, taskId)
+        try (HttpResponse httpResponse = HttpRequest.get(GET_OUT_PAINTING_TASK_URL)
                 .header(Header.AUTHORIZATION, "Bearer " + apiKey)
                 .execute();) {
             if (!httpResponse.isOk()) {
