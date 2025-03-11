@@ -7,6 +7,9 @@ import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.jige.jigepicturebackend.api.aliyunai.AliYunAiApi;
+import com.jige.jigepicturebackend.api.aliyunai.model.CreateOutPaintingTaskRequest;
+import com.jige.jigepicturebackend.api.aliyunai.model.CreateOutPaintingTaskResponse;
 import com.jige.jigepicturebackend.config.CosClientConfig;
 import com.jige.jigepicturebackend.exception.BusinessException;
 import com.jige.jigepicturebackend.exception.ErrorCode;
@@ -46,8 +49,6 @@ import java.awt.*;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
 
 
@@ -72,8 +73,12 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
 
     @Resource
     private SpaceService spaceService;
+
     @Autowired
     private TransactionTemplate transactionTemplate;
+
+    @Resource
+    private AliYunAiApi aliYunAiApi;
 
 /*    @Resource
     private ThreadPoolExecutor customExecutor;*/
@@ -673,7 +678,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
 
         //批量重命名
         String nameRule = pictureEditByBatchRequest.getNameRule();
-        fillPictureWithNameRule(pictureList,nameRule);
+        fillPictureWithNameRule(pictureList, nameRule);
 
 
         //5.批量更新
@@ -705,9 +710,10 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
 
 
 
-
     /*
-    *//**
+     */
+
+    /**
      * 批量编辑图片分类和标签
      * 处理大量数据
      * 使用线程池 + 分批 + 并发进行优化
@@ -758,8 +764,24 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
     }*/
 
-
-
+    @Override
+    public CreateOutPaintingTaskResponse createPictureOutPaintingTask(CreatePictureOutPaintingTaskRequest createPictureOutPaintingTaskRequest, User loginUser) {
+        ThrowUtils.throwIf(createPictureOutPaintingTaskRequest == null, ErrorCode.PARAMS_ERROR);
+        //获取图片信息
+        Long pictureId = createPictureOutPaintingTaskRequest.getPictureId();
+        Picture picture = Optional.ofNullable(this.getById(pictureId))
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_ERROR));
+        //权限校验
+        checkPictureAuth(picture, loginUser);
+        //构造请求参数
+        CreateOutPaintingTaskRequest taskRequest = new CreateOutPaintingTaskRequest();
+        CreateOutPaintingTaskRequest.Input input = new CreateOutPaintingTaskRequest.Input();
+        input.setImageUrl(picture.getUrl());
+        taskRequest.setInput(input);
+        BeanUtils.copyProperties(createPictureOutPaintingTaskRequest, taskRequest);
+        //创建任务
+        return aliYunAiApi.createOutPaintingTask(taskRequest);
+    }
 }
 
 
