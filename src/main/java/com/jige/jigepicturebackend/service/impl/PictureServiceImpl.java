@@ -162,6 +162,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
         picture.setUrl(uploadPictureResult.getUrl());
         //设置上传后返回的缩略图地址
         picture.setThumbnailUrl(uploadPictureResult.getThumbnailUrl());
+        picture.setJpgUrl(uploadPictureResult.getJpgUrl());
         // 补充设置 spaceId
         picture.setSpaceId(spaceId);
         //获取到要手动设置的图片名称，而不是完全依赖于解析的结果
@@ -177,7 +178,6 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
         picture.setPicFormat(uploadPictureResult.getPicFormat());
         picture.setUserId(loginUser.getId());
         picture.setPicColor(uploadPictureResult.getPicColor());
-        picture.setJpgUrl(uploadPictureResult.getJpgUrl());
         // 补充审核参数
         this.fillReviewParams(picture, loginUser);
         //如果pictureId不为空，表示更新，否则是新增

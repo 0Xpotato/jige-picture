@@ -59,7 +59,7 @@ public abstract class PictureUploadTemplate {
 
             if (CollUtil.isNotEmpty(objectList)) {
                 //获取以图搜图url
-                CIObject pngObject = objectList.get(0);
+                CIObject jpgObject = objectList.get(0);
                 //获取压缩之后的文件信息
                 CIObject compressedCiObject = objectList.get(1);
                 //缩略图默认等于压缩图
@@ -69,7 +69,7 @@ public abstract class PictureUploadTemplate {
                     thumbnailCiObject = objectList.get(2);
                 }
                 // 封装压缩图返回结果
-                return buildResult(originFilename, pngObject, compressedCiObject, thumbnailCiObject, imageInfo);
+                return buildResult(originFilename, jpgObject, compressedCiObject, thumbnailCiObject, imageInfo);
             }
             // 5.封装返回结果
             return buildResult(originFilename, file, uploadPath, imageInfo);
@@ -125,7 +125,7 @@ public abstract class PictureUploadTemplate {
         }
     }
 
-    private UploadPictureResult buildResult(String originFilename, CIObject pngObject, CIObject compressedCiObject, CIObject thumbnailCiObject, ImageInfo imageInfo) {
+    private UploadPictureResult buildResult(String originFilename, CIObject jpgObject, CIObject compressedCiObject, CIObject thumbnailCiObject, ImageInfo imageInfo) {
         UploadPictureResult uploadPictureResult = new UploadPictureResult();
         // 计算宽高
         int picWidth = compressedCiObject.getWidth();
@@ -142,10 +142,10 @@ public abstract class PictureUploadTemplate {
         uploadPictureResult.setPicColor(imageInfo.getAve());
         // 设置图片为压缩后的地址
         uploadPictureResult.setUrl(cosClientConfig.getHost() + "/" + compressedCiObject.getKey());
-        // 设置缩略图
+        // 设置缩略图地址
         uploadPictureResult.setThumbnailUrl(cosClientConfig.getHost() + "/" + thumbnailCiObject.getKey());
         //设置以图搜图url
-        uploadPictureResult.setJpgUrl(cosClientConfig.getHost() + "/" + pngObject.getKey());
+        uploadPictureResult.setJpgUrl(cosClientConfig.getHost() + "/" + jpgObject.getKey());
         // 返回可访问的地址
         return uploadPictureResult;
     }

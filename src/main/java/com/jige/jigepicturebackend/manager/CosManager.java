@@ -97,18 +97,19 @@ public class CosManager {
         String jpgKey = FileUtil.mainName(key) + ".jpg";
         PicOperations.Rule jpgRule = new PicOperations.Rule();
         jpgRule.setBucket(cosClientConfig.getBucket());
-        jpgRule.setRule("imageMogr2/format/jpg"); // 转换为 png 格式
+        jpgRule.setRule("imageMogr2/format/jpg"); // 转换为 jpg 格式
         jpgRule.setFileId(jpgKey);
         rules.add(jpgRule);
-        // 缩略图处理，仅对 > 10 KB 的图片生成缩略图    10*1024字节=10KB
-        if (file.length() > 10 * 1024) {
+        // 缩略图处理，仅对 > 10 KB 的图片生成缩略图    2*1024字节=2KB
+        if (file.length() > 2 * 1024) {
             PicOperations.Rule thumbnailRule = new PicOperations.Rule();
             thumbnailRule.setBucket(cosClientConfig.getBucket());
-//            String thumbnailKey = FileUtil.mainName(file) + "_thumbnail." + FileUtil.getSuffix(key);
-            String thumbnailKey = FileUtil.mainName(file) + "_thumbnail.webp";
+//            String thumbnailKey = FileUtil.mainName(key) + "_thumbnail." + FileUtil.getSuffix(key);
+//            String thumbnailKey = FileUtil.mainName(key) + "_thumbnail.jpg";
+            String thumbnailKey = FileUtil.mainName(key) + "_thumbnail.jpeg";
             thumbnailRule.setFileId(thumbnailKey);
             // 缩放规则 /thumbnail/<Width>x<Height>>（如果生成的缩略图大于原图宽高，则不处理）
-            thumbnailRule.setRule(String.format("imageMogr2/thumbnail/%sx%s", 128, 128));
+            thumbnailRule.setRule(String.format("imageMogr2/thumbnail/%sx%s>", 256, 256));
             rules.add(thumbnailRule);
         }
         // 构造处理参数
