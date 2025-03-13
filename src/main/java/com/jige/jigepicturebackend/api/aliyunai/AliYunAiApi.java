@@ -1,9 +1,6 @@
 package com.jige.jigepicturebackend.api.aliyunai;
 
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.http.Header;
-import cn.hutool.http.HttpRequest;
-import cn.hutool.http.HttpResponse;
 import cn.hutool.json.JSONUtil;
 import com.jige.jigepicturebackend.api.aliyunai.model.CreateOutPaintingTaskRequest;
 import com.jige.jigepicturebackend.api.aliyunai.model.CreateOutPaintingTaskResponse;
@@ -11,20 +8,30 @@ import com.jige.jigepicturebackend.api.aliyunai.model.GetOutPaintingTaskResponse
 import com.jige.jigepicturebackend.exception.BusinessException;
 import com.jige.jigepicturebackend.exception.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.RequestBody;
 
-@Component
+import java.io.IOException;
+
 @Slf4j
+@Component
 public class AliYunAiApi {
-    //读取配置文件
+
+    // 读取配置文件
     @Value("${aliYunAi.apiKey}")
     private String apiKey;
 
-    //创建任务地址
+    // 创建任务地址
     public static final String CREATE_OUT_PAINTING_TASK_URL = "https://dashscope.aliyuncs.com/api/v1/services/aigc/image2image/out-painting";
-    //查询任务状态
+
+    // 查询任务状态
     public static final String GET_OUT_PAINTING_TASK_URL = "https://dashscope.aliyuncs.com/api/v1/tasks/%s";
 
     /**
@@ -34,27 +41,31 @@ public class AliYunAiApi {
      * @return
      */
     public CreateOutPaintingTaskResponse createOutPaintingTask(CreateOutPaintingTaskRequest createOutPaintingTaskRequest) {
-        if (createOutPaintingTaskRequest == null) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "扩图参数为空");
-        }
-        //--header "Authorization: Bearer $DASHSCOPE_API_KEY" \
-        // -header 'X-DashScope-Async: enable' \
-        // --header 'Content-Type: application/json' \
-        //发起请求
-        HttpRequest httpRequest = HttpRequest.post(CREATE_OUT_PAINTING_TASK_URL).header(Header.AUTHORIZATION, "Bearer " + apiKey).header("X-DashScope-Async", "enable").header(Header.CONTENT_TYPE, "application/json").body(JSONUtil.toJsonStr(createOutPaintingTaskRequest));
-        try (HttpResponse httpResponse = httpRequest.execute()) {
-            if (!httpResponse.isOk()) {
-                log.error("请求异常，{}", httpResponse.body());
-                throw new BusinessException(ErrorCode.OPERATION_ERROR, "AI扩图失败");
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            HttpPost httpPost = new HttpPost(CREATE_OUT_PAINTING_TASK_URL);
+            httpPost.addHeader("X-DashScope-Async", "enable");
+            httpPost.addHeader("Authorization", "Bearer " + apiKey);
+            httpPost.addHeader("Content-Type", "application/json");
+            StringEntity entity = new StringEntity(JSONUtil.toJsonStr(createOutPaintingTaskRequest), "UTF-8");
+            httpPost.setEntity(entity);
+            CloseableHttpResponse response = httpClient.execute(httpPost);
+            String responseBody = EntityUtils.toString(response.getEntity(), "UTF-8");
+            if (response.getStatusLine().getStatusCode() != 200) {
+                log.error("请求异常：{}", responseBody);
+                throw new BusinessException(ErrorCode.OPERATION_ERROR, "AI 扩图失败");
             }
-            CreateOutPaintingTaskResponse response = JSONUtil.toBean(httpResponse.body(), CreateOutPaintingTaskResponse.class);
-            String errorCode = response.getCode();
+
+            CreateOutPaintingTaskResponse paintingResponse = JSONUtil.toBean(responseBody, CreateOutPaintingTaskResponse.class);
+            String errorCode = paintingResponse.getCode();
             if (StrUtil.isNotBlank(errorCode)) {
-                String errorMessage = response.getMessage();
-                log.error("AI扩图失败,errorCode:{},errorMessage:{}", errorCode, errorMessage);
-                throw new BusinessException(ErrorCode.OPERATION_ERROR, "AI扩图失败");
+                String errorMessage = paintingResponse.getMessage();
+                log.error("AI 扩图失败，errorCode:{}, errorMessage:{}", errorCode, errorMessage);
+                throw new BusinessException(ErrorCode.OPERATION_ERROR, "AI 扩图接口响应异常");
             }
-            return response;
+            return paintingResponse;
+        } catch (IOException e) {
+            log.error("创建扩图任务时发生错误", e);
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "系统错误，请稍后再试");
         }
     }
 
@@ -64,21 +75,24 @@ public class AliYunAiApi {
      * @param taskId
      * @return
      */
-
-    //curl -X GET \
-    //--header "Authorization: Bearer $DASHSCOPE_API_KEY" \
-    //https://dashscope.aliyuncs.com/api/v1/tasks/86ecf553-d340-4e21-xxxxxxxxx
     public GetOutPaintingTaskResponse getOutPaintingTask(String taskId) {
         if (StrUtil.isBlank(taskId)) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "任务 id 不能为空");
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "任务 id 不能为空");
         }
-        try (HttpResponse httpResponse = HttpRequest.get(GET_OUT_PAINTING_TASK_URL)
-                .header(Header.AUTHORIZATION, "Bearer " + apiKey)
-                .execute();) {
-            if (!httpResponse.isOk()) {
-                throw new BusinessException(ErrorCode.OPERATION_ERROR, "AI扩图失败");
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            HttpGet httpGet = new HttpGet(String.format(GET_OUT_PAINTING_TASK_URL, taskId));
+            httpGet.addHeader("Authorization", "Bearer " + apiKey);
+            CloseableHttpResponse response = httpClient.execute(httpGet);
+            String responseBody = EntityUtils.toString(response.getEntity(), "UTF-8");
+            if (response.getStatusLine().getStatusCode() != 200) {
+                log.error("请求异常：{}", responseBody);
+                throw new BusinessException(ErrorCode.OPERATION_ERROR, "获取任务失败");
             }
-            return JSONUtil.toBean(httpResponse.body(), GetOutPaintingTaskResponse.class);
+            return JSONUtil.toBean(responseBody, GetOutPaintingTaskResponse.class);
+        } catch (IOException e) {
+            log.error("获取图片 task 信息发生错误", e);
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "系统错误，请稍后再试");
         }
     }
 }
+
