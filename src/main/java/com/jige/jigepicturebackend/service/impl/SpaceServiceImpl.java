@@ -6,20 +6,17 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.jige.jigepicturebackend.common.DeleteRequest;
 import com.jige.jigepicturebackend.exception.BusinessException;
 import com.jige.jigepicturebackend.exception.ErrorCode;
 import com.jige.jigepicturebackend.exception.ThrowUtils;
 import com.jige.jigepicturebackend.mapper.SpaceMapper;
 import com.jige.jigepicturebackend.model.dto.space.SpaceAddRequest;
 import com.jige.jigepicturebackend.model.dto.space.SpaceQueryRequest;
-import com.jige.jigepicturebackend.model.entity.Picture;
 import com.jige.jigepicturebackend.model.entity.Space;
 import com.jige.jigepicturebackend.model.entity.User;
 import com.jige.jigepicturebackend.model.enums.SpaceLevelEnum;
 import com.jige.jigepicturebackend.model.vo.SpaceVO;
 import com.jige.jigepicturebackend.model.vo.UserVO;
-import com.jige.jigepicturebackend.service.PictureService;
 import com.jige.jigepicturebackend.service.SpaceService;
 import com.jige.jigepicturebackend.service.UserService;
 import org.springframework.beans.BeanUtils;
@@ -219,6 +216,19 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space> implements
         }
     }
 
+    /**
+     * 空间权限校验
+     *
+     * @param loginUser
+     * @param space
+     */
+    @Override
+    public void checkSpaceAuth(Space space, User loginUser) {
+        // 仅本人或管理员可编辑
+        if (!space.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+        }
+    }
 
 }
 

@@ -76,9 +76,10 @@ public class SpaceController {
         Space oldSpace = spaceService.getById(id);
         ThrowUtils.throwIf(oldSpace == null, ErrorCode.NOT_FOUND_ERROR);
         // 仅本人或者管理员可删除
-        if (!oldSpace.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
+        /*if (!oldSpace.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
-        }
+        }*/
+        spaceService.checkSpaceAuth(oldSpace, loginUser);
         // 操作数据库
         boolean result = spaceService.removeById(id);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
@@ -212,9 +213,10 @@ public class SpaceController {
         Space oldSpace = spaceService.getById(id);
         ThrowUtils.throwIf(ObjectUtil.isNull(oldSpace), ErrorCode.NOT_FOUND_ERROR);
         //仅本人或管理员可以编辑
-        if (!loginUser.getId().equals(space.getUserId()) && !userService.isAdmin(loginUser)) {
+        /*if (!loginUser.getId().equals(space.getUserId()) && !userService.isAdmin(loginUser)) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
-        }
+        }*/
+        spaceService.checkSpaceAuth(oldSpace,loginUser);
         //操作数据库
         boolean result = spaceService.updateById(space);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
