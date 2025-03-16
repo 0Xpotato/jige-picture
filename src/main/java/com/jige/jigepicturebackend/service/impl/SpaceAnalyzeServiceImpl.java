@@ -241,7 +241,7 @@ public class SpaceAnalyzeServiceImpl implements SpaceAnalyzeService {
         String timeDimension = spaceUserAnalyzeRequest.getTimeDimension();
         switch (timeDimension) {
             case "day":
-                queryWrapper.select("DATA_FORMAT(createTime,'%Y-%m-%d) as period", "COUNT(*) as count");
+                queryWrapper.select("DATE_FORMAT(createTime, '%Y-%m-%d') as period", "COUNT(*) as count");
                 break;
             case "week":
                 queryWrapper.select("YEARWEEK(createTime) as period", "COUNT(*) as count");
@@ -273,15 +273,15 @@ public class SpaceAnalyzeServiceImpl implements SpaceAnalyzeService {
 
 
     @Override
-    public List<Space> getSpaceRankAnalyze(SpaceRankAnalyzeRequest spaceRankAnalyzeRequest, User loginUser){
+    public List<Space> getSpaceRankAnalyze(SpaceRankAnalyzeRequest spaceRankAnalyzeRequest, User loginUser) {
         ThrowUtils.throwIf(spaceRankAnalyzeRequest == null, ErrorCode.PARAMS_ERROR);
 
         //仅管理员可以查看空间排行
-        ThrowUtils.throwIf(!userService.isAdmin(loginUser),ErrorCode.NO_AUTH_ERROR,"无权查看空间排行");
+        ThrowUtils.throwIf(!userService.isAdmin(loginUser), ErrorCode.NO_AUTH_ERROR, "无权查看空间排行");
 
         //构造查询条件
         QueryWrapper<Space> queryWrapper = new QueryWrapper<>();
-        queryWrapper.select("id","spaceName","userId","totalSize")
+        queryWrapper.select("id", "spaceName", "userId", "totalSize")
                 .orderByDesc("totalSize")   //降序排序
                 .last("LIMIT " + spaceRankAnalyzeRequest.getTopN());
 
