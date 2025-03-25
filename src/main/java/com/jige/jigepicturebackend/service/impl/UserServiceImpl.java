@@ -9,7 +9,6 @@ import com.jige.jigepicturebackend.constant.UserConstant;
 import com.jige.jigepicturebackend.exception.BusinessException;
 import com.jige.jigepicturebackend.exception.ErrorCode;
 import com.jige.jigepicturebackend.exception.ThrowUtils;
-import com.jige.jigepicturebackend.manager.auth.StpKit;
 import com.jige.jigepicturebackend.model.dto.user.UserQueryRequest;
 import com.jige.jigepicturebackend.model.entity.User;
 import com.jige.jigepicturebackend.model.enums.UserRoleEnum;
@@ -94,9 +93,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
         //4.保存用户的登录态
         request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, user);
-        //5.记录用户登录态到 Sa-token 中，便于空间鉴权时使用，注意保证该用户信息与 SpringSession 中的信息过期时间一致
-        StpKit.SPACE.login(user.getId());
-        StpKit.SPACE.getSession().set(UserConstant.USER_LOGIN_STATE,user);
         return this.getLoginUserVO(user);
     }
 
@@ -191,7 +187,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
         //已登录，移除登录态
         request.getSession().removeAttribute(UserConstant.USER_LOGIN_STATE);
-        StpKit.SPACE.logout(((User)userObj).getId());
         return true;
     }
 
