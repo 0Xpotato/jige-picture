@@ -235,36 +235,70 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
         boolean nullSpaceId = pictureQueryRequest.isNullSpaceId();
         Date startEditTime = pictureQueryRequest.getStartEditTime();
         Date endEditTime = pictureQueryRequest.getEndEditTime();
-        // 从多字段中搜索
-        if (StrUtil.isNotBlank(searchText)) {
-            // 需要拼接查询条件
-            queryWrapper.and(qw -> qw.like("name", searchText).or().like("introduction", searchText));
-        }
-        queryWrapper.eq(ObjUtil.isNotEmpty(id), "id", id);
-        queryWrapper.eq(ObjUtil.isNotEmpty(userId), "userId", userId);
-        queryWrapper.like(StrUtil.isNotBlank(name), "name", name);
-        queryWrapper.like(StrUtil.isNotBlank(introduction), "introduction", introduction);
-        queryWrapper.like(StrUtil.isNotBlank(picFormat), "picFormat", picFormat);
-        queryWrapper.like(StrUtil.isNotBlank(reviewMessage), "reviewMessage", reviewMessage);
-        queryWrapper.eq(StrUtil.isNotBlank(category), "category", category);
-        queryWrapper.eq(ObjUtil.isNotEmpty(picWidth), "picWidth", picWidth);
-        queryWrapper.eq(ObjUtil.isNotEmpty(picHeight), "picHeight", picHeight);
-        queryWrapper.eq(ObjUtil.isNotEmpty(picSize), "picSize", picSize);
-        queryWrapper.eq(ObjUtil.isNotEmpty(picScale), "picScale", picScale);
-        queryWrapper.eq(ObjUtil.isNotEmpty(reviewerId), "reviewerId", reviewerId);
-        queryWrapper.eq(ObjUtil.isNotEmpty(reviewStatus), "reviewStatus", reviewStatus);
-        queryWrapper.eq(ObjUtil.isNotEmpty(spaceId), "spaceId", spaceId);
-        queryWrapper.isNull(nullSpaceId, "spaceId");
-        queryWrapper.ge(ObjUtil.isNotEmpty(startEditTime), "editTime", startEditTime);
-        queryWrapper.lt(ObjUtil.isNotEmpty(endEditTime), "editTime", endEditTime);
-        // JSON 数组查询
-        if (CollUtil.isNotEmpty(tags)) {
-            for (String tag : tags) {
-                queryWrapper.like("tags", "\"" + tag + "\"");
+        //如果是查询公共图库，则审核状态、审核人、审核信息需要不为空
+        if (spaceId == null) {
+            // 从多字段中搜索
+            if (StrUtil.isNotBlank(searchText)) {
+                // 需要拼接查询条件
+                queryWrapper.and(qw -> qw.like("name", searchText).or().like("introduction", searchText));
             }
+            queryWrapper.eq(ObjUtil.isNotEmpty(id), "id", id);
+            queryWrapper.eq(ObjUtil.isNotEmpty(userId), "userId", userId);
+            queryWrapper.like(StrUtil.isNotBlank(name), "name", name);
+            queryWrapper.like(StrUtil.isNotBlank(introduction), "introduction", introduction);
+            queryWrapper.like(StrUtil.isNotBlank(picFormat), "picFormat", picFormat);
+            queryWrapper.like(StrUtil.isNotBlank(reviewMessage), "reviewMessage", reviewMessage);
+            queryWrapper.eq(StrUtil.isNotBlank(category), "category", category);
+            queryWrapper.eq(ObjUtil.isNotEmpty(picWidth), "picWidth", picWidth);
+            queryWrapper.eq(ObjUtil.isNotEmpty(picHeight), "picHeight", picHeight);
+            queryWrapper.eq(ObjUtil.isNotEmpty(picSize), "picSize", picSize);
+            queryWrapper.eq(ObjUtil.isNotEmpty(picScale), "picScale", picScale);
+            queryWrapper.eq(ObjUtil.isNotEmpty(reviewerId), "reviewerId", reviewerId);
+            queryWrapper.eq(ObjUtil.isNotEmpty(reviewStatus), "reviewStatus", reviewStatus);
+            queryWrapper.eq(ObjUtil.isNotEmpty(spaceId), "spaceId", spaceId);
+            queryWrapper.isNull(nullSpaceId, "spaceId");
+            queryWrapper.ge(ObjUtil.isNotEmpty(startEditTime), "editTime", startEditTime);
+            queryWrapper.lt(ObjUtil.isNotEmpty(endEditTime), "editTime", endEditTime);
+            // JSON 数组查询
+            if (CollUtil.isNotEmpty(tags)) {
+                for (String tag : tags) {
+                    queryWrapper.like("tags", "\"" + tag + "\"");
+                }
+            }
+            // 排序
+            queryWrapper.orderBy(StrUtil.isNotEmpty(sortField), sortOrder.equals("ascend"), sortField);
         }
-        // 排序
-        queryWrapper.orderBy(StrUtil.isNotEmpty(sortField), sortOrder.equals("ascend"), sortField);
+
+        else {
+            //如果是私有空间，则不需要查询审核状态、审核人、审核信息，因为默认为空
+            // 从多字段中搜索
+            if (StrUtil.isNotBlank(searchText)) {
+                // 需要拼接查询条件
+                queryWrapper.and(qw -> qw.like("name", searchText).or().like("introduction", searchText));
+            }
+            queryWrapper.eq(ObjUtil.isNotEmpty(id), "id", id);
+            queryWrapper.eq(ObjUtil.isNotEmpty(userId), "userId", userId);
+            queryWrapper.like(StrUtil.isNotBlank(name), "name", name);
+            queryWrapper.like(StrUtil.isNotBlank(introduction), "introduction", introduction);
+            queryWrapper.like(StrUtil.isNotBlank(picFormat), "picFormat", picFormat);
+            queryWrapper.eq(StrUtil.isNotBlank(category), "category", category);
+            queryWrapper.eq(ObjUtil.isNotEmpty(picWidth), "picWidth", picWidth);
+            queryWrapper.eq(ObjUtil.isNotEmpty(picHeight), "picHeight", picHeight);
+            queryWrapper.eq(ObjUtil.isNotEmpty(picSize), "picSize", picSize);
+            queryWrapper.eq(ObjUtil.isNotEmpty(picScale), "picScale", picScale);
+            queryWrapper.eq(ObjUtil.isNotEmpty(spaceId), "spaceId", spaceId);
+            queryWrapper.isNull(nullSpaceId, "spaceId");
+            queryWrapper.ge(ObjUtil.isNotEmpty(startEditTime), "editTime", startEditTime);
+            queryWrapper.lt(ObjUtil.isNotEmpty(endEditTime), "editTime", endEditTime);
+            // JSON 数组查询
+            if (CollUtil.isNotEmpty(tags)) {
+                for (String tag : tags) {
+                    queryWrapper.like("tags", "\"" + tag + "\"");
+                }
+            }
+            // 排序
+            queryWrapper.orderBy(StrUtil.isNotEmpty(sortField), sortOrder.equals("ascend"), sortField);
+        }
         return queryWrapper;
     }
 
@@ -763,7 +797,6 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
         // 等待所有任务完成
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
     }*/
-
     @Override
     public CreateOutPaintingTaskResponse createPictureOutPaintingTask(CreatePictureOutPaintingTaskRequest createPictureOutPaintingTaskRequest, User loginUser) {
         ThrowUtils.throwIf(createPictureOutPaintingTaskRequest == null, ErrorCode.PARAMS_ERROR);

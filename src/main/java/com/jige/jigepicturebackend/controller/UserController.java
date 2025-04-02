@@ -37,7 +37,7 @@ public class UserController {
      *
      * @return
      */
-/*    @PostMapping("/register")
+    @PostMapping("/register")
     public BaseResponse<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
         ThrowUtils.throwIf(userRegisterRequest == null, ErrorCode.PARAMS_ERROR);
         String userAccount = userRegisterRequest.getUserAccount();
@@ -45,7 +45,7 @@ public class UserController {
         String checkPassword = userRegisterRequest.getCheckPassword();
         long result = userService.userRegister(userAccount, userPassword, checkPassword);
         return ResultUtils.success(result);
-    }*/
+    }
 
     /**
      * 用户登录
