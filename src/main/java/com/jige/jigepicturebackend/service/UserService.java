@@ -2,6 +2,7 @@ package com.jige.jigepicturebackend.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jige.jigepicturebackend.model.dto.user.UserQueryRequest;
+import com.jige.jigepicturebackend.model.dto.user.VipExchangeRequest;
 import com.jige.jigepicturebackend.model.entity.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.jige.jigepicturebackend.model.vo.LoginUserVO;
@@ -87,4 +88,9 @@ public interface UserService extends IService<User> {
      * @return
      */
     boolean isAdmin(User user);
+
+    /**
+     * 用户兑换会员（会员码兑换）
+     */
+    boolean exchangeVip(User user, String vipCode);
 }

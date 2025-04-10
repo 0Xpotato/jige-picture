@@ -354,6 +354,7 @@ public class PictureController {
      * 以图搜图接口
      */
     @PostMapping("/search/picture")
+    @AuthCheck(mustRole = UserConstant.VIP_ROLE)
     public BaseResponse<List<ImageSearchResult>> searchPictureByPicture(@RequestBody SearchPictureByPictureRequest searchPictureByPictureRequest) {
         //判空
         ThrowUtils.throwIf(searchPictureByPictureRequest == null, ErrorCode.PARAMS_ERROR);
@@ -411,6 +412,7 @@ public class PictureController {
      * @return
      */
     @PostMapping("/out_painting/create_task")
+    @AuthCheck(mustRole = UserConstant.VIP_ROLE)
     public BaseResponse<CreateOutPaintingTaskResponse> createPictureOutPaintingTask(@RequestBody CreatePictureOutPaintingTaskRequest createPictureOutPaintingTaskRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(createPictureOutPaintingTaskRequest == null
                 || createPictureOutPaintingTaskRequest.getPictureId() == null, ErrorCode.PARAMS_ERROR);
@@ -426,6 +428,7 @@ public class PictureController {
      * @return
      */
     @GetMapping("/out_painting/get_task")
+    @AuthCheck(mustRole = UserConstant.VIP_ROLE)
     public BaseResponse<GetOutPaintingTaskResponse> getPictureOutPaintingTask(String taskId) {
         ThrowUtils.throwIf(taskId==null,ErrorCode.PARAMS_ERROR);
         GetOutPaintingTaskResponse task = aliYunAiApi.getOutPaintingTask(taskId);
