@@ -18,7 +18,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
@@ -318,12 +320,32 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      */
     private JSONArray readVipCodeFile() {
         try {
-            Resource resource = resourceLoader.getResource("classpath:biz/vipCode.json");
-            String content = FileUtil.readString(resource.getFile(), StandardCharsets.UTF_8);
-            return JSONUtil.parseArray(content);
+            // 定义文件路径常量
+            final String CLASSPATH_VIP_CODE_PATH = "classpath:biz/vipCode.json";
+            final String EXTERNAL_VIP_CODE_PATH = "/www/wwwroot/config/biz/vipCode.json";
+
+            // 优先尝试从外部配置文件读取
+            File externalFile = new File(EXTERNAL_VIP_CODE_PATH);
+            if (externalFile.exists()) {
+                return JSONUtil.readJSONArray(externalFile, StandardCharsets.UTF_8);
+            }
+
+            // 如果外部文件不存在，从 classpath 读取初始文件
+            Resource resource = resourceLoader.getResource(CLASSPATH_VIP_CODE_PATH);
+            if (!resource.exists()) {
+                throw new BusinessException(ErrorCode.SYSTEM_ERROR, "兑换码文件不存在，请检查配置");
+            }
+
+            try (InputStream inputStream = resource.getInputStream()) {
+                // 使用正确的文件读取方式
+                String content = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+                // 将初始文件复制到外部路径（首次运行自动创建）
+                FileUtil.writeString(content, externalFile, StandardCharsets.UTF_8);
+                return JSONUtil.parseArray(content);
+            }
         } catch (IOException e) {
             log.error("读取兑换码文件失败", e);
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "系统繁忙");
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "系统繁忙，请稍后重试");
         }
     }
 
@@ -332,9 +354,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      */
     private void writeVipCodeFile(JSONArray jsonArray) {
         try {
-            Resource resource = resourceLoader.getResource("classpath:biz/vipCode.json");
-            FileUtil.writeString(jsonArray.toStringPretty(), resource.getFile(), StandardCharsets.UTF_8);
-        } catch (IOException e) {
+            String externalPath = "/www/wwwroot/config/biz/vipCode.json"; // 与读取路径一致
+            FileUtil.writeString(jsonArray.toStringPretty(), externalPath, StandardCharsets.UTF_8);
+        } catch (Exception e) {
             log.error("更新兑换码文件失败", e);
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "系统繁忙");
         }

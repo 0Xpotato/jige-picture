@@ -17,8 +17,11 @@ import com.jige.jigepicturebackend.model.vo.LoginUserVO;
 import com.jige.jigepicturebackend.model.vo.PictureTagCategory;
 import com.jige.jigepicturebackend.model.vo.UserRole;
 import com.jige.jigepicturebackend.model.vo.UserVO;
+import com.jige.jigepicturebackend.service.SpaceService;
 import com.jige.jigepicturebackend.service.UserService;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import com.jige.jigepicturebackend.model.entity.Space;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -31,6 +34,9 @@ public class UserController {
 
     @Resource
     private UserService userService;
+
+    @Resource
+    private SpaceService spaceService;
 
     /**
      * 用户注册
@@ -134,18 +140,26 @@ public class UserController {
 
     /**
      * 删除用户 （仅管理员）
-     *
+     *  todo事务开启之后，要注意未创建空间的用户删除不了用户，具体看业务需求
      * @param deleteRequest
      * @return
      */
     @PostMapping("/delete")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+//    @Transactional(rollbackFor = Exception.class) // 开启事务，确保操作失败时回滚
     public BaseResponse<Boolean> deleteUser(@RequestBody DeleteRequest deleteRequest) {
         if (deleteRequest == null || deleteRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        boolean result = userService.removeById(deleteRequest.getId());
-        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "删除失败，数据库异常");
+
+        // 删除用户
+        boolean userDeleted = userService.lambdaUpdate().eq(User::getId, deleteRequest.getId()).remove();
+        ThrowUtils.throwIf(!userDeleted, ErrorCode.OPERATION_ERROR, "删除用户失败，数据库异常");
+
+        // 删除用户所拥有的空间
+        boolean spaceDeleted = spaceService.lambdaUpdate().eq(Space::getUserId, deleteRequest.getId()).remove();
+        ThrowUtils.throwIf(!spaceDeleted, ErrorCode.OPERATION_ERROR, "删除用户空间失败，数据库异常");
+
         return ResultUtils.success(true);
     }
 
