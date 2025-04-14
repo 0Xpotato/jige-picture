@@ -206,12 +206,13 @@ public class PictureController {
             pictureQueryRequest.setNullSpaceId(true);
         } else {
             //私有空间
-            User loginUser = userService.getLoginUser(request);
+            // 已经改为使用注解鉴权
+/*            User loginUser = userService.getLoginUser(request);
             Space space = spaceService.getById(spaceId);
             ThrowUtils.throwIf(space == null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
             if (!loginUser.getId().equals(space.getUserId())) {
                 throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "没有空间权限");
-            }
+            }*/
         }
         // 查询数据库
         Page<Picture> picturePage = pictureService.page(new Page<>(current, Size), pictureService.getQueryWrapper(pictureQueryRequest));

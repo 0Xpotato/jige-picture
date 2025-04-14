@@ -17,6 +17,7 @@ import com.jige.jigepicturebackend.model.dto.spaceuser.SpaceUserQueryRequest;
 import com.jige.jigepicturebackend.model.entity.SpaceUser;
 import com.jige.jigepicturebackend.model.entity.User;
 import com.jige.jigepicturebackend.model.vo.SpaceUserVO;
+import com.jige.jigepicturebackend.service.SpaceService;
 import com.jige.jigepicturebackend.service.SpaceUserService;
 import com.jige.jigepicturebackend.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +45,9 @@ public class SpaceUserController {
     @Resource
     private UserService userService;
 
+    @Resource
+    private SpaceService spaceService;
+
     /**
      * 添加成员到空间
      */
@@ -70,6 +74,7 @@ public class SpaceUserController {
         SpaceUser oldSpaceUser = spaceUserService.getById(id);
         ThrowUtils.throwIf(oldSpaceUser == null, ErrorCode.NOT_FOUND_ERROR);
         // 操作数据库
+        //删除团队空间表中相关的数据
         boolean result = spaceUserService.removeById(id);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         return ResultUtils.success(true);
@@ -99,6 +104,8 @@ public class SpaceUserController {
     @SaSpaceCheckPermission(value = SpaceUserPermissionConstant.SPACE_USER_MANAGE)
     public BaseResponse<List<SpaceUserVO>> listSpaceUser(@RequestBody SpaceUserQueryRequest spaceUserQueryRequest,
                                                          HttpServletRequest request) {
+
+
         ThrowUtils.throwIf(spaceUserQueryRequest == null, ErrorCode.PARAMS_ERROR);
         List<SpaceUser> spaceUserList = spaceUserService.list(
                 spaceUserService.getQueryWrapper(spaceUserQueryRequest)
