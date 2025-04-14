@@ -28,18 +28,35 @@ spring:
     multipart:
       #      最大可上传的文件大小
       max-file-size: 10MB
-  #      redis配置
+  # redis配置
   redis:
+    # Redis数据库索引（默认为0）
     database: 0
+    # Redis服务器地址
     host: 127.0.0.1
+    # Redis服务器连接端口
     port: 6379
-    #    redis缓存失效时间为5分钟
-    timeout: 5000
+    # Redis服务器连接密码（默认为空）
+    # password:
+    # 连接超时时间
+    timeout: 10s
+    lettuce:
+      pool:
+        # 连接池最大连接数
+        max-active: 200
+        # 连接池最大阻塞等待时间（使用负值表示没有限制）
+        max-wait: -1ms
+        # 连接池中的最大空闲连接
+        max-idle: 10
+        # 连接池中的最小空闲连接
+        min-idle: 0
     # session 配置
   session:
     store-type: redis
     # 1. session 30 天过期，1天24小时，1小时60分钟，1分钟60秒
     timeout: 2592000
+
+
 
 mybatis-plus:
   configuration:
@@ -67,3 +84,5 @@ knife4j:
         api-rule: package
         api-rule-resources:
           - com.jige.jigepicturebackend.controller
+
+

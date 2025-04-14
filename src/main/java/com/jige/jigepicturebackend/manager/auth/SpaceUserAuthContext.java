@@ -5,8 +5,13 @@ import com.jige.jigepicturebackend.model.entity.Space;
 import com.jige.jigepicturebackend.model.entity.SpaceUser;
 import lombok.Data;
 
+/**
+ * SpaceUserAuthContext
+ * 表示用户在特定空间内的授权上下文，包括关联的图片、空间和用户信息。
+ */
 @Data
 public class SpaceUserAuthContext {
+
     /**
      * 临时参数，不同请求对应的 id 可能不同
      */
@@ -41,8 +46,4 @@ public class SpaceUserAuthContext {
      * 空间用户信息
      */
     private SpaceUser spaceUser;
-
-
-
-
 }

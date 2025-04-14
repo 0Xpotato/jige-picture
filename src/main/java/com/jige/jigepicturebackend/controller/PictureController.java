@@ -372,7 +372,7 @@ public class PictureController {
      * 以图搜图接口
      */
     @PostMapping("/search/picture")
-    @AuthCheck(mustRole = UserConstant.VIP_ROLE)
+//    @AuthCheck(mustRole = UserConstant.VIP_ROLE)
     public BaseResponse<List<ImageSearchResult>> searchPictureByPicture(@RequestBody SearchPictureByPictureRequest searchPictureByPictureRequest) {
         //判空
         ThrowUtils.throwIf(searchPictureByPictureRequest == null, ErrorCode.PARAMS_ERROR);
@@ -432,7 +432,7 @@ public class PictureController {
      * @return
      */
     @PostMapping("/out_painting/create_task")
-    @AuthCheck(mustRole = UserConstant.VIP_ROLE)
+//    @AuthCheck(mustRole = UserConstant.VIP_ROLE)
     @SaSpaceCheckPermission(value = SpaceUserPermissionConstant.PICTURE_EDIT)
     public BaseResponse<CreateOutPaintingTaskResponse> createPictureOutPaintingTask(@RequestBody CreatePictureOutPaintingTaskRequest createPictureOutPaintingTaskRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(createPictureOutPaintingTaskRequest == null
@@ -449,7 +449,7 @@ public class PictureController {
      * @return
      */
     @GetMapping("/out_painting/get_task")
-    @AuthCheck(mustRole = UserConstant.VIP_ROLE)
+//    @AuthCheck(mustRole = UserConstant.VIP_ROLE)
 //    @SaSpaceCheckPermission(value = SpaceUserPermissionConstant.PICTURE_VIEW)   //后期如果有bug可以删除
     public BaseResponse<GetOutPaintingTaskResponse> getPictureOutPaintingTask(String taskId) {
         ThrowUtils.throwIf(taskId==null,ErrorCode.PARAMS_ERROR);
@@ -457,3 +457,4 @@ public class PictureController {
         return ResultUtils.success(task);
     }
 }
+

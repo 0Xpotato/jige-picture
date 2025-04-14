@@ -17,60 +17,41 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
-/**
- * 权限校验拦截器
- */
-@Aspect
-@Component
+@Aspect     //切面
+@Component  //组件，声明为Spring的bean
 public class AuthInterceptor {
     @Resource
     private UserService userService;
 
     /**
-     * 管理员可以访问所有VIP权限接口
-     * VIP用户不能访问管理员权限接口
-     * 普通用户（user）只能访问未标注权限或明确标注user权限的接口
-     * 权限校验层级关系：ADMIN > VIP > USER
+     * 执行拦截
+     *
+     * @param joinPoint 切入点
+     * @param authCheck 权限校验注解
+     * @return
      */
     @Around("@annotation(authCheck)")
     public Object doInterceptor(ProceedingJoinPoint joinPoint, AuthCheck authCheck) throws Throwable {
         String mustRole = authCheck.mustRole();
         RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
         HttpServletRequest request = ((ServletRequestAttributes) requestAttributes).getRequest();
-
-        // 获取当前登录用户
+        //获取当前登录用户
         User loginUser = userService.getLoginUser(request);
         UserRoleEnum mustRoleEnum = UserRoleEnum.getEnumByValue(mustRole);
-
-        // 如果不需要权限，放行
+        //如果不需要权限，放行
         if (mustRoleEnum == null) {
             return joinPoint.proceed();
         }
-
-        // 获取用户角色并校验
+        //以下的代码，必须有权限,才会通过
         UserRoleEnum userRoleEnum = UserRoleEnum.getEnumByValue(loginUser.getUserRole());
         if (userRoleEnum == null) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
         }
-
-        // 根据要求的角色进行校验
-        if (mustRoleEnum == UserRoleEnum.ADMIN) {
-            // 必须管理员角色
-            if (userRoleEnum != UserRoleEnum.ADMIN) {
-                throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
-            }
-        } else if (mustRoleEnum == UserRoleEnum.VIP) {
-            // 需要VIP角色，允许VIP或ADMIN
-            if (userRoleEnum != UserRoleEnum.VIP && userRoleEnum != UserRoleEnum.ADMIN) {
-                throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
-            }
-        } else {
-            // 其他角色需要严格匹配
-            if (userRoleEnum != mustRoleEnum) {
-                throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
-            }
+        //要求必须有管理员权限，但用户没有管理员权限，拒绝
+        if (UserRoleEnum.ADMIN.equals(mustRoleEnum) && !UserRoleEnum.ADMIN.equals(userRoleEnum)) {
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
         }
-
+        //通过权限校验，放行
         return joinPoint.proceed();
     }
 }
