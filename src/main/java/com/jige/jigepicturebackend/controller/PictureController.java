@@ -450,7 +450,7 @@ public class PictureController {
      */
     @GetMapping("/out_painting/get_task")
     @AuthCheck(mustRole = UserConstant.VIP_ROLE)
-    @SaSpaceCheckPermission(value = SpaceUserPermissionConstant.PICTURE_VIEW)   //后期如果有bug可以删除
+//    @SaSpaceCheckPermission(value = SpaceUserPermissionConstant.PICTURE_VIEW)   //后期如果有bug可以删除
     public BaseResponse<GetOutPaintingTaskResponse> getPictureOutPaintingTask(String taskId) {
         ThrowUtils.throwIf(taskId==null,ErrorCode.PARAMS_ERROR);
         GetOutPaintingTaskResponse task = aliYunAiApi.getOutPaintingTask(taskId);
