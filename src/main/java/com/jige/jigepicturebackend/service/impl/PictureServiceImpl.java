@@ -113,10 +113,13 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
         if (pictureId != null) {
             Picture oldPicture = this.getById(pictureId);
             ThrowUtils.throwIf(oldPicture == null, ErrorCode.NOT_FOUND_ERROR, "图片不存在");
-            // 仅本人或管理员可编辑,不是本人或管理员不能编辑
+
+            //已经改成Sa-Token进行权限校验
+
+/*            // 仅本人或管理员可编辑,不是本人或管理员不能编辑
             if (!oldPicture.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
                 throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
-            }
+            }*/
             //校验空间是否一致
             //若用户没传spaceId，则复用原有图片的spaceId
             if (spaceId == null) {
@@ -124,10 +127,13 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
                     spaceId = oldPicture.getSpaceId();
                     Space space = spaceService.getById(spaceId);
                     ThrowUtils.throwIf(space == null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
-                    // 必须空间创建人（管理员）才能上传
-                    if (!space.getUserId().equals(loginUser.getId())) {
-                        throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "没有空间权限");
-                    }
+
+                    //已经改成Sa-Token进行权限校验
+
+/*                    // 必须空间创建人（管理员）才能上传
+//                    if (!space.getUserId().equals(loginUser.getId())) {
+//                        throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "没有空间权限");
+                    }*/
                     // 校验额度
                     if (space.getTotalSize() >= space.getMaxSize()) {
                         throw new BusinessException(ErrorCode.PARAMS_ERROR, "空间大小不足");
@@ -267,9 +273,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
             }
             // 排序
             queryWrapper.orderBy(StrUtil.isNotEmpty(sortField), sortOrder.equals("ascend"), sortField);
-        }
-
-        else {
+        } else {
             //如果是私有空间，则不需要查询审核状态、审核人、审核信息，因为默认为空
             // 从多字段中搜索
             if (StrUtil.isNotBlank(searchText)) {

@@ -1,4 +1,4 @@
-package com.jige.jigepicturebackend.model.entity.auth;
+package com.jige.jigepicturebackend.manager.auth.model;
 
 import lombok.Data;
 

@@ -1,4 +1,4 @@
-package com.jige.jigepicturebackend.constant;
+package com.jige.jigepicturebackend.manager.auth.model;
 
 public interface SpaceUserPermissionConstant {
     /**
