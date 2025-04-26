@@ -11,20 +11,22 @@
 
 1）所有用户都可以在平台公开上传和检索图片素材，快速找到需要的图片。可用作表情包网站、设计素材网站、壁纸网站等：
 
-![](imageimage1.png)
+![image](https://github.com/user-attachments/assets/76a981a6-d231-4b1a-87f2-340a5b2253e1)
+
 
 2）管理员可以上传、审核和管理图片，并对系统内的图片进行分析：
 
-![](imageimage2.png)
+![image](https://github.com/user-attachments/assets/b65f0cab-843f-413b-b06b-8e0e3415bb0f)
+
 
 3）对于个人用户，可将图片上传至私有空间进行批量管理、检索、编辑和分析，用作个人网盘、个人相册、作品集等：
 
-![](imageimage3.png)
+![image](https://github.com/user-attachments/assets/d368a2e1-0487-4797-ab0d-01a87e08479e)
 
 
 项目架构设计图：
 
-![](imageimage.png)
+![image](https://github.com/user-attachments/assets/58f15cd4-0ea2-4ed0-acc6-e5fad2a364ee)
 
 
 ## 技术选型
